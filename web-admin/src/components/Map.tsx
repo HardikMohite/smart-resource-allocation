@@ -1,0 +1,111 @@
+'use client';
+
+import React, { useState, useCallback } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+const center = {
+  lat: 40.7128,
+  lng: -74.0060
+};
+
+interface Task {
+  task_id: string;
+  title: string;
+  description: string;
+  category: string;
+  severity_score: number;
+  latitude: number;
+  longitude: number;
+}
+
+interface MapProps {
+  tasks: Task[];
+}
+
+export default function Map({ tasks }: MapProps) {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+  });
+
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  const onLoad = useCallback(function callback(map: google.maps.Map) {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(function callback(map: google.maps.Map) {
+    setMap(null);
+  }, []);
+
+  if (!isLoaded) return <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center">Loading Maps...</div>;
+
+  return (
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={12}
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+      options={{
+        styles: [
+          {
+            "elementType": "geometry",
+            "stylers": [{ "color": "#242f3e" }]
+          },
+          {
+            "elementType": "labels.text.stroke",
+            "stylers": [{ "color": "#242f3e" }]
+          },
+          {
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#746855" }]
+          }
+        ]
+      }}
+    >
+      {tasks.map((task) => (
+        <Marker
+          key={task.task_id}
+          position={{ lat: task.latitude, lng: task.longitude }}
+          onClick={() => setSelectedTask(task)}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: task.severity_score > 7 ? "#ef4444" : "#f97316",
+            fillOpacity: 0.9,
+            strokeWeight: 2,
+            strokeColor: "#ffffff",
+            scale: 10 + task.severity_score,
+          }}
+        />
+      ))}
+
+      {selectedTask && (
+        <InfoWindow
+          position={{ lat: selectedTask.latitude, lng: selectedTask.longitude }}
+          onCloseClick={() => setSelectedTask(null)}
+        >
+          <div className="p-2 max-w-xs">
+            <h3 className="font-bold text-slate-900">{selectedTask.title}</h3>
+            <p className="text-sm text-slate-600 mt-1">{selectedTask.description}</p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                selectedTask.severity_score > 7 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+              }`}>
+                Severity: {selectedTask.severity_score}/10
+              </span>
+              <span className="text-xs text-slate-400 capitalize">{selectedTask.category}</span>
+            </div>
+          </div>
+        </InfoWindow>
+      )}
+    </GoogleMap>
+  );
+}
