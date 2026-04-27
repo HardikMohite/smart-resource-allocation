@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Shield, Send, Users, Globe, Zap, ArrowRight } from 'lucide-react';
+import { Send, Users, Globe, Zap, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 export default function LandingPage() {

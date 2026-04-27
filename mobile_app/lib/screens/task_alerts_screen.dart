@@ -67,7 +67,7 @@ class TaskAlertsScreen extends StatelessWidget {
                   final taskId = tasks[index].id;
 
                   return Card(
-                    margin: const EdgeInsets.bottom(16),
+                    margin: const EdgeInsets.only(bottom: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 4,
                     shadowColor: Colors.black12,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Shield, Menu, X, ArrowRight, Github } from 'lucide-react';
+import { Shield, Menu, X, ArrowRight, Globe } from 'lucide-react';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,7 +63,7 @@ export default function Navbar() {
             target="_blank" 
             className="text-slate-400 hover:text-white transition-colors"
           >
-            <Github size={20} />
+            <Globe size={20} />
           </a>
           <Link 
             href="/dashboard"

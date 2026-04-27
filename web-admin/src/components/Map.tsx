@@ -37,13 +37,13 @@ export default function Map({ tasks }: MapProps) {
   });
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [, setMap] = useState<google.maps.Map | null>(null);
 
-  const onLoad = useCallback(function callback(map: google.maps.Map) {
-    setMap(map);
+  const onLoad = useCallback(function callback(_map: google.maps.Map) {
+    setMap(_map);
   }, []);
 
-  const onUnmount = useCallback(function callback(map: google.maps.Map) {
+  const onUnmount = useCallback(function callback(_map: google.maps.Map) {
     setMap(null);
   }, []);
 
