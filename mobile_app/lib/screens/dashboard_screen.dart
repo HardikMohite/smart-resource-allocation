@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/main.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,10 +21,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    try {
-      _firestore = FirebaseFirestore.instance;
-    } catch (e) {
-      print('Firestore not available in Demo Mode');
+    if (isFirebaseInitialized) {
+      try {
+        _firestore = FirebaseFirestore.instance;
+      } catch (e) {
+        print('Firestore not available in Demo Mode');
+      }
     }
     _getCurrentLocation();
   }
@@ -58,17 +61,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _isAvailable = value;
     });
 
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && _firestore != null) {
-        await _firestore!.collection('volunteers').doc(user.uid).update({
-          'is_available': value,
-          'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
-          'last_updated': FieldValue.serverTimestamp(),
-        });
+    if (!isFirebaseInitialized || _firestore == null) {
+      print('Demo Mode: Skipping Firestore update');
+    } else {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await _firestore!.collection('volunteers').doc(user.uid).update({
+            'is_available': value,
+            'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
+            'last_updated': FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        print('Firebase Error (Demo Mode): $e');
       }
-    } catch (e) {
-      print('Firebase Error (Demo Mode): $e');
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

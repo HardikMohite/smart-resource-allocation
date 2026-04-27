@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TaskAlertsScreen extends StatelessWidget {
@@ -9,10 +10,12 @@ class TaskAlertsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     User? user;
-    try {
-      user = FirebaseAuth.instance.currentUser;
-    } catch (e) {
-      print('Firebase Auth not available in Demo Mode');
+    if (isFirebaseInitialized) {
+      try {
+        user = FirebaseAuth.instance.currentUser;
+      } catch (e) {
+        print('Firebase Auth not available in Demo Mode');
+      }
     }
     
     return Scaffold(

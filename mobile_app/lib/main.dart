@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app/screens/dashboard_screen.dart';
 
+bool isFirebaseInitialized = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
     // Attempt to initialize Firebase (will fail if options are missing)
     // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // isFirebaseInitialized = true;
     print('Firebase initialized successfully');
   } catch (e) {
     print('Running in Demo Mode: Firebase not initialized');
