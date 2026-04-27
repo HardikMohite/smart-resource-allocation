@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
 import 'dart:developer' as developer;
 
 class TaskAlertsScreen extends StatelessWidget {
@@ -20,19 +21,9 @@ class TaskAlertsScreen extends StatelessWidget {
     }
     
     return Scaffold(
-      appBar: AppBar(title: const Text('My Assignments')),
+      backgroundColor: Colors.transparent, // Hosted in Dashboard
       body: user == null 
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.lock_outline, size: 64, color: Colors.blueGrey.shade200),
-                const SizedBox(height: 16),
-                const Text('Login required for assignments', style: TextStyle(color: Colors.blueGrey)),
-                const Text('(Running in Demo Mode)', style: TextStyle(fontSize: 10, color: Colors.grey)),
-              ],
-            ),
-          )
+        ? _buildEmptyState('LOGIN REQUIRED', LucideIcons.lock)
         : StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('tasks')
@@ -40,105 +31,163 @@ class TaskAlertsScreen extends StatelessWidget {
                 .where('status', isEqualTo: 'assigned')
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+              if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6)));
               }
 
               final tasks = snapshot.data?.docs ?? [];
 
               if (tasks.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.assignment_turned_in_outlined, size: 64, color: Colors.blueGrey.shade200),
-                      const SizedBox(height: 16),
-                      const Text('No active assignments', style: TextStyle(color: Colors.blueGrey)),
-                    ],
-                  ),
-                );
+                return _buildEmptyState('NO ACTIVE DISPATCHES', LucideIcons.checkCircle);
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   final task = tasks[index].data() as Map<String, dynamic>;
                   final taskId = tasks[index].id;
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 4,
-                    shadowColor: Colors.black12,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with Severity
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.02),
+                            border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+                          ),
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+                                ),
                                 child: Text(
-                                  task['title'] ?? 'Untitled Task',
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  'LVL ${task['severity_score']}',
+                                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 10, fontWeight: FontWeight.black, letterSpacing: 1.0),
                                 ),
                               ),
-                              Chip(
-                                label: Text('Lvl ${task['severity_score']}'),
-                                backgroundColor: Colors.red.shade50,
-                                labelStyle: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                              ),
+                              const Icon(LucideIcons.moreHorizontal, size: 18, color: Colors.slate),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(task['description'] ?? '', style: TextStyle(color: Colors.blueGrey.shade600)),
-                          const Divider(height: 32),
-                          Row(
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final lat = task['latitude'];
-                                    final lng = task['longitude'];
-                                    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-                                    if (await canLaunchUrl(Uri.parse(url))) {
-                                      await launchUrl(Uri.parse(url));
-                                    }
-                                  },
-                                  icon: const Icon(Icons.navigation),
-                                  label: const Text('Navigate'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
+                              Text(
+                                task['title']?.toString().toUpperCase() ?? 'UNTITLED OPERATION',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () async {
-                                    await FirebaseFirestore.instance
-                                        .collection('tasks')
-                                        .doc(taskId)
-                                        .update({'status': 'resolved'});
-                                  },
-                                  icon: const Icon(Icons.check),
-                                  label: const Text('Resolve'),
-                                ),
+                              const SizedBox(height: 8),
+                              Text(
+                                task['description'] ?? 'No description provided.',
+                                style: TextStyle(color: Colors.slate.shade400, fontSize: 13, height: 1.5),
+                              ),
+                              const SizedBox(height: 32),
+                              
+                              // Action Row
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () async {
+                                        final lat = task['latitude'];
+                                        final lng = task['longitude'];
+                                        final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+                                        if (await canLaunchUrl(Uri.parse(url))) {
+                                          await launchUrl(Uri.parse(url));
+                                        }
+                                      },
+                                      icon: const Icon(LucideIcons.navigation, size: 16),
+                                      label: const Text('NAVIGATE', style: TextStyle(letterSpacing: 1.2)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF3B82F6),
+                                        padding: const EdgeInsets.symmetric(vertical: 18),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+                                    ),
+                                    child: IconButton(
+                                      onPressed: () async {
+                                        await FirebaseFirestore.instance
+                                            .collection('tasks')
+                                            .doc(taskId)
+                                            .update({'status': 'resolved'});
+                                      },
+                                      icon: const Icon(LucideIcons.checkCircle, color: Color(0xFF10B981), size: 24),
+                                      padding: const EdgeInsets.all(14),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 },
               );
             },
           ),
+    );
+  }
+
+  Widget _buildEmptyState(String title, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.02),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
+            child: Icon(icon, size: 48, color: Colors.slate.shade600),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.0,
+              color: Colors.slate.shade500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Operations are running normally.',
+            style: TextStyle(fontSize: 11, color: Colors.slate),
+          ),
+        ],
+      ),
     );
   }
 }

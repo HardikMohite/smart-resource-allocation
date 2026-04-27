@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/main.dart';
+import 'package:mobile_app/screens/task_alerts_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
 import 'dart:developer' as developer;
 
 class DashboardScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Position? _currentPosition;
   bool _isAvailable = false;
   FirebaseFirestore? _firestore;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -83,79 +86,135 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(value ? 'You are now ON DUTY' : 'You are now OFF DUTY'),
-        backgroundColor: value ? Colors.green : Colors.red,
+        content: Text(value ? 'YOU ARE NOW ON DUTY' : 'YOU ARE NOW OFF DUTY', 
+          style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+        backgroundColor: value ? const Color(0xFF10B981) : const Color(0xFFEF4444),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(20),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      _buildMainDashboard(),
+      const TaskAlertsScreen(),
+      _buildProfileScreen(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'VOLUNTEER DASHBOARD',
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
-        ),
+        title: const Text('COMMAND CENTER'),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
+            icon: const Icon(LucideIcons.bell, size: 20),
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          // Duty Toggle Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
-            child: Card(
-              elevation: 0,
-              color: _isAvailable ? Colors.green.shade50 : Colors.blueGrey.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: _isAvailable ? Colors.green.shade200 : Colors.blueGrey.shade200,
-                ),
+      body: pages[_currentIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          backgroundColor: const Color(0xFF0F172A),
+          selectedItemColor: const Color(0xFF3B82F6),
+          unselectedItemColor: Colors.slate.shade600,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0),
+          unselectedLabelStyle: const TextStyle(fontSize: 10, letterSpacing: 1.0),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(LucideIcons.layoutDashboard, size: 20), label: 'MAP'),
+            BottomNavigationBarItem(icon: Icon(LucideIcons.listTodo, size: 20), label: 'TASKS'),
+            BottomNavigationBarItem(icon: Icon(LucideIcons.user, size: 20), label: 'PROFILE'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainDashboard() {
+    return Column(
+      children: [
+        // Duty Status Header (Glassmorphism effect)
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: _isAvailable 
+                ? const Color(0xFF10B981).withValues(alpha: 0.1) 
+                : const Color(0xFF334155).withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: _isAvailable 
+                  ? const Color(0xFF10B981).withValues(alpha: 0.2) 
+                  : const Color(0xFF475569).withValues(alpha: 0.3),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: _isAvailable ? const Color(0xFF10B981) : Colors.slate.shade600,
+                      shape: BoxShape.circle,
+                      boxShadow: _isAvailable ? [
+                        BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 2)
+                      ] : [],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _isAvailable ? 'ON DUTY' : 'OFF DUTY',
+                          _isAvailable ? 'ACTIVE ON DUTY' : 'OFF DUTY INACTIVE',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             fontWeight: FontWeight.w900,
-                            color: _isAvailable ? Colors.green.shade700 : Colors.blueGrey.shade700,
+                            letterSpacing: 1.2,
+                            color: _isAvailable ? const Color(0xFF10B981) : Colors.slate.shade400,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          _isAvailable ? 'Awaiting assignments...' : 'Go on duty to receive tasks',
-                          style: TextStyle(fontSize: 12, color: Colors.blueGrey.shade500),
+                          _isAvailable ? 'Broadcasting live location...' : 'Enable duty to receive dispatches',
+                          style: TextStyle(fontSize: 11, color: Colors.slate.shade500, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
-                    Switch.adaptive(
-                      value: _isAvailable,
-                      onChanged: _toggleDuty,
-                      activeThumbColor: Colors.green,
-                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
-                    ),
-                  ],
-                ),
+                  ),
+                  Switch.adaptive(
+                    value: _isAvailable,
+                    onChanged: _toggleDuty,
+                    activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.5),
+                    activeColor: const Color(0xFF10B981),
+                  ),
+                ],
               ),
             ),
           ),
-          
-          // Map Section
-          Expanded(
+        ),
+        
+        // Map Container
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            ),
             child: Stack(
               children: [
                 _currentPosition == null
@@ -169,33 +228,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         myLocationEnabled: true,
                         myLocationButtonEnabled: false,
                         zoomControlsEnabled: false,
+                        style: _darkMapStyle, // In real app, load from json
                       ),
                 
-                // Floating Action Buttons
+                // Overlay Controls
                 Positioned(
-                  bottom: 20,
-                  right: 20,
-                  child: FloatingActionButton(
-                    onPressed: _getCurrentLocation,
-                    backgroundColor: Colors.white,
-                    child: const Icon(Icons.my_location, color: Colors.blue),
+                  bottom: 24,
+                  right: 24,
+                  child: Column(
+                    children: [
+                      _buildMapFab(LucideIcons.layers, () {}),
+                      const SizedBox(height: 12),
+                      _buildMapFab(LucideIcons.navigation, _getCurrentLocation, isPrimary: true),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: Colors.blue.shade700,
-        unselectedItemColor: Colors.blueGrey.shade400,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Status'),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Tasks'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapFab(IconData icon, VoidCallback onPressed, {bool isPrimary = false}) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: isPrimary ? const Color(0xFF3B82F6) : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
+          border: Border.all(color: isPrimary ? Colors.transparent : Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
       ),
     );
   }
+
+  Widget _buildProfileScreen() {
+    return Center(
+      child: Text('Profile Screen - NGO Admin', style: TextStyle(color: Colors.slate.shade400)),
+    );
+  }
+
+  // Placeholder for Google Maps Dark Style JSON
+  final String? _darkMapStyle = null; 
 }
