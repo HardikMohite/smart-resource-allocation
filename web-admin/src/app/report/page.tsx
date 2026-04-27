@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Camera, Send, ArrowLeft, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Camera, Send, ArrowLeft, CheckCircle2, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function ReportPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mockId, setMockId] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,13 +15,10 @@ export default function ReportPage() {
     
     // Simulate API call
     setTimeout(() => {
+      const generatedId = "demo-" + Math.random().toString(36).substr(2, 9);
+      setMockId(generatedId);
       setIsSubmitting(false);
       setIsSubmitted(true);
-      
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 5000);
     }, 1500);
   };
 
@@ -47,14 +45,23 @@ export default function ReportPage() {
                 <CheckCircle2 size={48} />
               </div>
               <h2 className="text-2xl font-bold mb-3">Report Submitted!</h2>
-              <p className="text-slate-400 leading-relaxed">
-                Thank you for your report. Our AI is verifying the situation and local NGOs have been alerted.
+              <p className="text-slate-400 leading-relaxed mb-8">
+                Thank you. Our AI is verifying the situation. You can now track your report's progress and see which volunteer is assigned.
               </p>
+              
+              <Link 
+                href={`/track/${mockId}`}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all hover:scale-[1.02] shadow-lg shadow-blue-600/20"
+              >
+                <span>Track My Report</span>
+                <ArrowRight size={18} />
+              </Link>
+
               <button 
                 onClick={() => setIsSubmitted(false)}
-                className="mt-10 text-sm text-blue-400 hover:text-blue-300 font-medium underline underline-offset-4"
+                className="mt-10 text-[10px] text-slate-500 hover:text-slate-400 font-bold uppercase tracking-widest transition-colors"
               >
-                Send another report
+                Submit another report
               </button>
             </div>
           ) : (

@@ -47,7 +47,7 @@ export default function Dashboard() {
     ];
 
     try {
-      const q = query(collection(db, 'tasks'), where('status', 'in', ['open', 'pending_verification']));
+      const q = query(collection(db, 'tasks'), where('status', 'in', ['open', 'pending_verification', 'assigned']));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const taskList = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -136,13 +136,17 @@ export default function Dashboard() {
       const taskRef = doc(db, 'tasks', (selectedTask as any).id || (selectedTask as any).task_id);
       await updateDoc(taskRef, {
         status: 'assigned',
-        assigned_volunteer_uid: volunteer.uid,
+        assigned_volunteer_uid: volunteer.uid || volunteer.id,
+        assigned_volunteer_name: volunteer.name,
+        assigned_volunteer_phone: "+1 (555) 902-3456", // Mock phone for demo
         dispatched_at: new Date().toISOString()
       });
+      toast.success(`Dispatched ${volunteer.name} successfully!`);
       setIsModalOpen(false);
       setSelectedTask(null);
     } catch (error) {
       console.error("Error dispatching volunteer:", error);
+      toast.error("Dispatch failed. Please check connection.");
     }
   };
 
