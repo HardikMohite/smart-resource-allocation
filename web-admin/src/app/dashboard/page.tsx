@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
 import Map from '@/components/Map';
 import TaskFeed from '@/components/TaskFeed';
 import DispatchModal from '@/components/DispatchModal';
-import { Activity, Shield, AlertTriangle, ArrowLeft, Lock, ChevronRight } from 'lucide-react';
+import { Activity, Shield, AlertTriangle, ArrowLeft, LogIn, LogOut, ChevronRight, Gavel } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const [tasks, setTasks] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
@@ -24,26 +24,45 @@ export default function Dashboard() {
   
   const prevTasksCount = React.useRef(0);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === "admin123") {
-      setIsAuthenticated(true);
-      setError("");
-      toast.success("Welcome back, Commander.");
-    } else {
-      setError("Unauthorized access. Incorrect credentials.");
-      toast.error("Access Denied");
+  // Monitor Authentication State
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+      if (currentUser) {
+        toast.success(`Authenticated as ${currentUser.displayName}`);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Login failed:", error);
+      toast.error("Google Sign-In failed. Check Firebase console for configuration.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.info("Logged out successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
   };
 
   // Real-time listener for tasks
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!user) return;
 
     const mockTasks = [
-      { id: '1', task_id: '1', title: 'Monsoon Flooding - Mumbai', description: 'Severe urban flooding reported. Emergency rescue teams requested.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777 },
-      { id: '2', task_id: '2', title: 'Earthquake Relief - Peru', description: 'Massive structural damage. Urgent need for medical supplies and trauma care.', category: 'Medical', severity_score: 9, latitude: -12.0464, longitude: -77.0428 },
-      { id: '3', task_id: '3', title: 'Drought Crisis - Kenya', description: 'Clean water shortage in remote village. NGO coordination required for supply run.', category: 'Water', severity_score: 8, latitude: -1.2921, longitude: 36.8219 },
+      { id: '1', task_id: '1', title: 'Monsoon Flooding - Mumbai', description: 'Severe urban flooding reported. Emergency rescue teams requested.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777, status: 'open' },
+      { id: '2', task_id: '2', title: 'Earthquake Relief - Peru', description: 'Massive structural damage. Urgent need for medical supplies and trauma care.', category: 'Medical', severity_score: 9, latitude: -12.0464, longitude: -77.0428, status: 'open' },
+      { id: '3', task_id: '3', title: 'Drought Crisis - Kenya', description: 'Clean water shortage in remote village. NGO coordination required for supply run.', category: 'Water', severity_score: 8, latitude: -1.2921, longitude: 36.8219, status: 'open' },
     ];
 
     try {
@@ -68,7 +87,7 @@ export default function Dashboard() {
         prevTasksCount.current = taskList.length;
         
         if (snapshot.empty && prevTasksCount.current === 0) {
-          setTasks(taskList.length > 0 ? taskList : mockTasks);
+          setTasks(mockTasks);
         } else {
           setTasks(taskList);
         }
@@ -80,11 +99,11 @@ export default function Dashboard() {
     } catch (e) {
       setTasks(mockTasks);
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
   // Real-time listener for volunteers
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!user) return;
 
     const mockVolunteers = [
       { id: 'v1', name: 'John Doe', is_available: true, location: { latitude: 40.7128, longitude: -74.0060 } },
@@ -111,7 +130,7 @@ export default function Dashboard() {
     } catch (e) {
       setVolunteers(mockVolunteers);
     }
-  }, [isAuthenticated]);
+  }, [user]);
 
   const handleFindMatch = async (task: any) => {
     setSelectedTask(task);
@@ -138,7 +157,7 @@ export default function Dashboard() {
         status: 'assigned',
         assigned_volunteer_uid: volunteer.uid || volunteer.id,
         assigned_volunteer_name: volunteer.name,
-        assigned_volunteer_phone: "+1 (555) 902-3456", // Mock phone for demo
+        assigned_volunteer_phone: "+1 (555) 902-3456",
         dispatched_at: new Date().toISOString()
       });
       toast.success(`Dispatched ${volunteer.name} successfully!`);
@@ -146,11 +165,19 @@ export default function Dashboard() {
       setSelectedTask(null);
     } catch (error) {
       console.error("Error dispatching volunteer:", error);
-      toast.error("Dispatch failed. Please check connection.");
+      toast.error("Dispatch failed.");
     }
   };
 
-  if (!isAuthenticated) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center text-white">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return (
       <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6 text-white font-sans">
         <Link href="/" className="fixed top-8 left-8 flex items-center space-x-2 text-slate-400 hover:text-white transition-colors">
@@ -159,39 +186,31 @@ export default function Dashboard() {
         </Link>
         
         <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-[2.5rem] p-10 shadow-2xl">
-          <div className="flex flex-col items-center text-center mb-8">
+          <div className="flex flex-col items-center text-center mb-10">
             <div className="bg-blue-600/20 p-4 rounded-2xl text-blue-400 mb-6 border border-blue-500/20">
-              <Lock size={32} />
+              <Shield size={32} />
             </div>
-            <h1 className="text-2xl font-black mb-2">NGO Admin Access</h1>
-            <p className="text-slate-400 text-sm">Enter administrative credentials to access the Command Center.</p>
+            <h1 className="text-3xl font-black mb-2">NGO Admin Portal</h1>
+            <p className="text-slate-400 text-sm">Secure access for humanitarian coordinators and responders.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                className="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-4 text-center text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all font-mono tracking-widest"
-                autoFocus
-              />
-              {error && <p className="text-red-400 text-xs mt-3 text-center font-bold uppercase tracking-wider">{error}</p>}
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black flex items-center justify-center space-x-2 shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.02]"
-            >
-              <span>Login to System</span>
-              <ChevronRight size={20} />
-            </button>
-          </form>
+          <button 
+            onClick={handleGoogleLogin}
+            className="w-full bg-white hover:bg-slate-100 text-slate-900 py-4 rounded-2xl font-bold flex items-center justify-center space-x-3 shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M24 12.25c0-.85-.07-1.71-.22-2.5H12v4.75h6.75c-.29 1.57-1.18 2.91-2.5 3.8v3.1h4.05c2.37-2.18 3.73-5.38 3.73-8.85z"/>
+              <path fill="#FBBC05" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-4.05-3.1c-1.11.75-2.52 1.19-3.9 1.19-3.01 0-5.56-2.03-6.47-4.75H1.42v3.17C3.4 21.6 7.42 24 12 24z"/>
+              <path fill="#34A853" d="M5.53 14.43c-.24-.71-.38-1.47-.38-2.25s.14-1.54.38-2.25V6.76H1.42C.51 8.5 0 10.25 0 12s.51 3.5 1.42 5.24l4.11-3.17z"/>
+              <path fill="#4285F4" d="M12 4.75c1.76 0 3.34.6 4.59 1.79l3.43-3.43C17.96 1.07 15.24 0 12 0 7.42 0 3.4 2.4 1.42 6.76l4.11 3.17c.91-2.72 3.46-4.75 6.47-4.75z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
           
-          <p className="mt-8 text-[10px] text-center text-slate-500 uppercase font-bold tracking-[0.2em]">
-            Authorized Personnel Only
-          </p>
+          <div className="mt-10 flex items-center justify-center space-x-2 text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">
+            <Gavel size={14} />
+            <span>Encrypted Production Gateway</span>
+          </div>
         </div>
       </div>
     );
@@ -213,16 +232,23 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4 px-4 py-1.5 bg-slate-800/50 rounded-full border border-slate-700">
+            <div className="flex items-center space-x-2">
+              <img src={user.photoURL || ""} alt={user.displayName || ""} className="w-6 h-6 rounded-full border border-blue-500/50" />
+              <span className="text-xs font-bold text-slate-200">{user.displayName}</span>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="text-slate-400 hover:text-red-400 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-300">Live: {volunteers.length} Volunteers Online</span>
+            <span className="text-sm font-medium text-slate-300">Live: {volunteers.length} Ready</span>
           </div>
-          <button 
-            onClick={() => setIsAuthenticated(false)}
-            className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-white"
-          >
-            Logout
-          </button>
         </div>
       </header>
 
