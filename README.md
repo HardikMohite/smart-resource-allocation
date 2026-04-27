@@ -1,57 +1,35 @@
-# Smart Resource Allocation System
-
+# 🌍 Smart Resource Allocation System
 **Google Solution Challenge 2026 - Build with AI**
 
-## 🚀 Overview
-The Smart Resource Allocation System is a production-grade disaster response platform that bridges the gap between field data and emergency resources. Using **Gemini 1.5 Pro**, we transform unstructured field surveys into actionable geospatial tasks, dispatched to local volunteers via a real-time matching engine.
+![Hackathon](https://img.shields.io/badge/Hackathon-Solution_Challenge_2026-blue)
+![Tech](https://img.shields.io/badge/Tech-Gemini_AI_%7C_Flutter_%7C_GCP_%7C_Next.js-orange)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-### 🟢 Impact (SDG Alignment)
-- **SDG 11 (Sustainable Cities and Communities):** Reducing response time in urban crises.
-- **SDG 17 (Partnerships for the Goals):** Coordinating NGOs and volunteers.
-- **SDG 13 (Climate Action):** Managing disaster recovery from extreme weather events.
+## 📌 The Vision
+When disasters strike, local NGOs are overwhelmed with scattered data, and volunteers are underutilized. We built an AI-powered ecosystem to bridge this gap, addressing **SDG 11 (Sustainable Cities)**, **SDG 13 (Climate Action)**, and **SDG 17 (Partnerships)**.
 
-### 🔵 Technology Stack
-- **Google Gemini 1.5 Pro:** Multimodal AI ingestion (Image to JSON).
-- **Google Cloud Run:** Scalable backend hosting.
-- **Firebase:** Real-time Firestore database and Authentication.
-- **Google Maps Platform:** Heatmap visualization and navigation.
-- **Flutter:** Cross-platform native mobile app for volunteers.
-- **Next.js 14:** Premium NGO administrative dashboard.
+## 🚀 Key Features
+1. **Citizen Crowdsourcing Portal:** Locals upload photos of emergencies and receive unique tracking IDs.
+2. **Gemini Anti-Spam Shield:** Google Gemini 1.5 Pro instantly analyzes images, verifies genuine emergencies, and extracts structured JSON (Severity, Coordinates).
+3. **NGO Command Center:** A secure Next.js dashboard featuring a real-time Severity Heatmap using Google Maps Platform, protected by **Google Authentication**.
+4. **Geospatial Dispatch:** Our FastAPI backend calculates distances using the Haversine formula to instantly match crises with the nearest qualified volunteers.
+5. **Real-time Tracking**: Victims can track their responder's status and contact details in real-time.
 
-## 📂 Project Structure
-- `/backend`: FastAPI Python server with Gemini integration.
-- `/web-admin`: Next.js dashboard for NGO admins.
-- `/mobile_app`: Flutter application for field volunteers.
-- `/firebase`: Security rules and configuration.
+## 🛠️ Google Technology Stack
+* **AI/ML:** Google Gemini 1.5 Pro (Multimodal)
+* **Backend Platform:** Google Cloud Run (Dockerized FastAPI)
+* **Web Admin:** Next.js + Google Maps Platform (Visualization Library) + Firebase Auth
+* **Mobile / Real-time:** Flutter + Firebase Cloud Firestore
 
-## 🛠️ Setup Instructions
+## ⚙️ How to Demo / Run Locally
+1. Clone the repository.
+2. Ensure you have your `.env` files setup with `GEMINI_API_KEY` and Firebase credentials.
+3. **Backend:** `cd backend` -> `pip install -r requirements.txt` -> `uvicorn main:app --reload`
+4. **Web Admin:** `cd web-admin` -> `npm install` -> `npm run dev`
+5. **Mobile App:** `cd mobile_app` -> `flutter run`
 
-### Backend
-1. `cd backend`
-2. `pip install -r requirements.txt`
-3. Set environment variable `GEMINI_API_KEY`.
-4. `python main.py`
+---
+### 📑 Documentation
+For a deep dive into the technical architecture and project roadmap, please see the [**Project Handoff Report**](./project_handoff_report.md).
 
-### Web Admin
-1. `cd web-admin`
-2. `npm install`
-3. Update `src/lib/firebase.ts` with your credentials.
-4. `npm run dev`
-
-### Mobile App
-1. `cd mobile_app`
-2. `flutter pub get`
-3. Configure Firebase for Android/iOS.
-4. `flutter run`
-
-## 💡 Winning Strategy Checklist
-- [x] **Anti-Spam Shield**: Emphasize how Gemini filters fake reports in the demo.
-- [ ] **Scalability**: Mention that the backend "scales to zero" on Cloud Run.
-- [ ] **AI Centrality**: Emphasize that Gemini is the **Data Ingestion Engine**, not just a chatbot.
-- [ ] **Visual Wow**: Use the dark-themed dashboard markers to create a "command center" feel during the demo.
-
-## 💡 Judging "Cheat Code" Points
-- **Scalability:** Built on Google Cloud Run and Firebase to scale to millions of users automatically.
-- **User Feedback:** Prototype tested with community leaders; added Severity Heatmap based on feedback.
-- **AI Integration:** Gemini 1.5 Pro is the core Data Ingestion Engine, not a gimmick.
-- **Anti-Spam Verification:** Uses multimodal AI to cross-verify images against descriptions, automatically filtering out fake or test reports to ensure NGO resources are never wasted.
+Built with ❤️ for the Google Solution Challenge 2026.
