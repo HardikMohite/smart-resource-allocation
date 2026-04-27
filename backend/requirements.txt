@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+google-generativeai
+firebase-admin
+pydantic
+geopy
+python-multipart
+python-dotenv
