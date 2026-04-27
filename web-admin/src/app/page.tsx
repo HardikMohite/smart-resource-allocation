@@ -3,30 +3,18 @@
 import React from 'react';
 import Link from 'next/link';
 import { Shield, Send, Users, Globe, Zap, ArrowRight } from 'lucide-react';
+import Navbar from '@/components/Navbar';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-white selection:bg-blue-500/30">
+      <Navbar />
+
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px]"></div>
       </div>
-
-      {/* Navigation */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
-            <Shield size={24} className="text-white" />
-          </div>
-          <span className="font-bold text-xl tracking-tight uppercase">SmartRelief AI</span>
-        </div>
-        <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-400">
-          <a href="#" className="hover:text-white transition-colors">How it works</a>
-          <a href="#" className="hover:text-white transition-colors">Impact</a>
-          <a href="#" className="hover:text-white transition-colors">Contact</a>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <main className="relative z-10 max-w-7xl mx-auto px-8 pt-20 pb-32">
@@ -100,12 +88,12 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/50 py-12 px-8 z-10 relative">
-        <div className="max-w-7xl mx-auto flex flex-col md:row items-center justify-between text-slate-500 text-sm">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-slate-500 text-sm">
           <p>© 2026 SmartRelief AI. Built for the Google Solution Challenge.</p>
           <div className="flex items-center space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">GitHub</a>
+            <a href="https://github.com/neev21-alt/smart-resource-allocation" className="hover:text-white transition-colors">GitHub</a>
           </div>
         </div>
       </footer>
