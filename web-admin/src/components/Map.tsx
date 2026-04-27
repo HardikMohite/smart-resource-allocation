@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
@@ -12,6 +12,8 @@ const center = {
   lat: 40.7128,
   lng: -74.0060
 };
+
+const libraries: ("visualization" | "places")[] = ["visualization"];
 
 interface Task {
   task_id: string;
@@ -30,11 +32,11 @@ interface MapProps {
 export default function Map({ tasks }: MapProps) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: libraries
   });
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const onLoad = useCallback(function callback(map: google.maps.Map) {
@@ -46,6 +48,11 @@ export default function Map({ tasks }: MapProps) {
   }, []);
 
   if (!isLoaded) return <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center">Loading Maps...</div>;
+
+  const heatmapData = tasks.map(t => ({
+    location: new google.maps.LatLng(t.latitude, t.longitude),
+    weight: t.severity_score
+  }));
 
   return (
     <GoogleMap
@@ -67,10 +74,48 @@ export default function Map({ tasks }: MapProps) {
           {
             "elementType": "labels.text.fill",
             "stylers": [{ "color": "#746855" }]
+          },
+          {
+            "featureType": "administrative.locality",
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#d59563" }]
+          },
+          {
+            "featureType": "poi",
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#d59563" }]
+          },
+          {
+            "featureType": "road",
+            "elementType": "geometry",
+            "stylers": [{ "color": "#38414e" }]
+          },
+          {
+            "featureType": "road",
+            "elementType": "geometry.stroke",
+            "stylers": [{ "color": "#212a37" }]
+          },
+          {
+            "featureType": "road",
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#9ca5b3" }]
+          },
+          {
+            "featureType": "water",
+            "elementType": "geometry",
+            "stylers": [{ "color": "#17263c" }]
           }
         ]
       }}
     >
+      <HeatmapLayer
+        data={heatmapData}
+        options={{
+          radius: 40,
+          opacity: 0.6,
+        }}
+      />
+
       {tasks.map((task) => (
         <Marker
           key={task.task_id}
