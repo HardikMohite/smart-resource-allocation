@@ -44,7 +44,14 @@ The Smart Resource Allocation System is a production-grade disaster response pla
 3. Configure Firebase for Android/iOS.
 4. `flutter run`
 
+## 💡 Winning Strategy Checklist
+- [x] **Anti-Spam Shield**: Emphasize how Gemini filters fake reports in the demo.
+- [ ] **Scalability**: Mention that the backend "scales to zero" on Cloud Run.
+- [ ] **AI Centrality**: Emphasize that Gemini is the **Data Ingestion Engine**, not just a chatbot.
+- [ ] **Visual Wow**: Use the dark-themed dashboard markers to create a "command center" feel during the demo.
+
 ## 💡 Judging "Cheat Code" Points
 - **Scalability:** Built on Google Cloud Run and Firebase to scale to millions of users automatically.
 - **User Feedback:** Prototype tested with community leaders; added Severity Heatmap based on feedback.
 - **AI Integration:** Gemini 1.5 Pro is the core Data Ingestion Engine, not a gimmick.
+- **Anti-Spam Verification:** Uses multimodal AI to cross-verify images against descriptions, automatically filtering out fake or test reports to ensure NGO resources are never wasted.

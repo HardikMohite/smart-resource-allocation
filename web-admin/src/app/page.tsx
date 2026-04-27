@@ -1,184 +1,114 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, where, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import Map from '@/components/Map';
-import TaskFeed from '@/components/TaskFeed';
-import DispatchModal from '@/components/DispatchModal';
-import { Activity, Shield, AlertTriangle } from 'lucide-react';
+import React from 'react';
+import Link from 'next/link';
+import { Shield, Send, Users, Globe, Zap, ArrowRight } from 'lucide-react';
 
-export default function Dashboard() {
-  const [tasks, setTasks] = useState([]);
-  const [volunteers, setVolunteers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [matches, setMatches] = useState([]);
-  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
-
-  // Real-time listener for tasks
-  useEffect(() => {
-    const mockTasks = [
-      { id: '1', task_id: '1', title: 'Flood Damage - Area 5', description: 'Major flooding reported near the riverside. Need immediate evacuation assistance.', category: 'Rescue', severity_score: 9, latitude: 40.7128, longitude: -74.0060 },
-      { id: '2', task_id: '2', title: 'Medical Supplies Shortage', description: 'Local clinic is running out of basic first aid kits and antibiotics.', category: 'Medical', severity_score: 8, latitude: 40.7306, longitude: -73.9352 },
-      { id: '3', task_id: '3', title: 'Power Line Down', description: 'Live wire on the street near public school. Urgent infrastructure repair needed.', category: 'Infrastructure', severity_score: 7, latitude: 40.7589, longitude: -73.9851 },
-    ];
-
-    try {
-      const q = query(collection(db, 'tasks'), where('status', '==', 'open'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-          setTasks(mockTasks);
-        } else {
-          const taskList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setTasks(taskList);
-        }
-      }, (error) => {
-        console.error("Firestore error:", error);
-        setTasks(mockTasks);
-      });
-      return () => unsubscribe();
-    } catch (e) {
-      setTasks(mockTasks);
-    }
-  }, []);
-
-  // Real-time listener for volunteers
-  useEffect(() => {
-    const mockVolunteers = [
-      { id: 'v1', name: 'John Doe', is_available: true, location: { latitude: 40.7128, longitude: -74.0060 } },
-      { id: 'v2', name: 'Jane Smith', is_available: true, location: { latitude: 40.7200, longitude: -74.0100 } },
-    ];
-
-    try {
-      const q = query(collection(db, 'volunteers'), where('is_available', '==', true));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-          setVolunteers(mockVolunteers);
-        } else {
-          const volunteerList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setVolunteers(volunteerList);
-        }
-      }, (error) => {
-        console.error("Firestore error:", error);
-        setVolunteers(mockVolunteers);
-      });
-      return () => unsubscribe();
-    } catch (e) {
-      setVolunteers(mockVolunteers);
-    }
-  }, []);
-
-  const handleFindMatch = async (task) => {
-    setSelectedTask(task);
-    setIsModalOpen(true);
-    setIsLoadingMatches(true);
-    
-    try {
-      // TODO: Replace with actual backend URL when deployed
-      const response = await fetch(`http://localhost:8000/api/v1/tasks/${task.task_id}/match`);
-      const data = await response.json();
-      setMatches(data);
-    } catch (error) {
-      console.error("Error fetching matches:", error);
-      // Fallback for demo purposes if backend is not running
-      setMatches([]);
-    } finally {
-      setIsLoadingMatches(false);
-    }
-  };
-
-  const handleDispatch = async (volunteer) => {
-    if (!selectedTask) return;
-    
-    try {
-      const taskRef = doc(db, 'tasks', selectedTask.id || selectedTask.task_id);
-      await updateDoc(taskRef, {
-        status: 'assigned',
-        assigned_volunteer_uid: volunteer.uid,
-        dispatched_at: new Date().toISOString()
-      });
-      
-      setIsModalOpen(false);
-      setSelectedTask(null);
-      // Success notification could go here
-    } catch (error) {
-      console.error("Error dispatching volunteer:", error);
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <main className="flex flex-col h-screen bg-slate-50 overflow-hidden">
-      {/* Navigation Bar */}
-      <header className="h-16 bg-slate-900 text-white flex items-center justify-between px-6 shadow-lg z-10">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <Shield size={24} />
-          </div>
-          <h1 className="font-bold text-xl tracking-tight uppercase">NGO Command Center</h1>
-        </div>
-        
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-300">Live: {volunteers.length} Volunteers Online</span>
-          </div>
-          <button className="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-            System Settings
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Column: Map */}
-        <div className="flex-1 relative bg-slate-200">
-          <Map tasks={tasks} />
-          
-          {/* Floating Stats Overlay */}
-          <div className="absolute top-4 left-4 flex space-x-4">
-            <div className="bg-white/90 backdrop-blur shadow-xl rounded-2xl p-4 border border-white flex items-center space-x-4">
-              <div className="bg-red-100 text-red-600 p-3 rounded-xl">
-                <AlertTriangle size={24} />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Critical Tasks</p>
-                <p className="text-2xl font-black text-slate-900">{tasks.filter(t => t.severity_score > 7).length}</p>
-              </div>
-            </div>
-            
-            <div className="bg-white/90 backdrop-blur shadow-xl rounded-2xl p-4 border border-white flex items-center space-x-4">
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-xl">
-                <Activity size={24} />
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Active</p>
-                <p className="text-2xl font-black text-slate-900">{tasks.length}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Task Feed */}
-        <div className="w-[400px] shadow-2xl z-20">
-          <TaskFeed tasks={tasks} onFindMatch={handleFindMatch} />
-        </div>
+    <div className="min-h-screen bg-[#0f172a] text-white selection:bg-blue-500/30">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px]"></div>
       </div>
 
-      {/* Dispatch Modal */}
-      <DispatchModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-        matches={matches}
-        onDispatch={handleDispatch}
-        taskTitle={selectedTask?.title || ""}
-      />
-    </main>
+      {/* Navigation */}
+      <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+        <div className="flex items-center space-x-3">
+          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-600/20">
+            <Shield size={24} className="text-white" />
+          </div>
+          <span className="font-bold text-xl tracking-tight uppercase">SmartRelief AI</span>
+        </div>
+        <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-400">
+          <a href="#" className="hover:text-white transition-colors">How it works</a>
+          <a href="#" className="hover:text-white transition-colors">Impact</a>
+          <a href="#" className="hover:text-white transition-colors">Contact</a>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="relative z-10 max-w-7xl mx-auto px-8 pt-20 pb-32">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full text-blue-400 text-xs font-bold uppercase tracking-wider mb-8">
+            <Zap size={14} />
+            <span>Google Solution Challenge 2026 Entry</span>
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
+            Empowering Communities & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Accelerating Relief.</span>
+          </h1>
+          
+          <p className="text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed">
+            Our AI-driven triage system transforms unstructured field data into actionable tasks, 
+            connecting victims with local volunteers through optimized geospatial matching.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <Link 
+              href="/dashboard"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all hover:scale-105 shadow-xl shadow-blue-600/20"
+            >
+              <Users size={20} />
+              <span>NGO Command Center</span>
+            </Link>
+            
+            <Link 
+              href="/report"
+              className="w-full sm:w-auto bg-transparent border-2 border-slate-700 hover:border-slate-500 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all hover:bg-slate-800"
+            >
+              <Send size={20} />
+              <span>Citizen Reporting Portal</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Features Preview */}
+        <div className="mt-32 grid md:grid-cols-3 gap-8">
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 rounded-3xl">
+            <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-6 text-blue-400">
+              <Zap size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">AI-Driven Triage</h3>
+            <p className="text-slate-400 leading-relaxed">
+              Gemini 1.5 Pro instantly analyzes messy images and survey text to determine severity and needs.
+            </p>
+          </div>
+          
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 rounded-3xl">
+            <div className="bg-indigo-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-6 text-indigo-400">
+              <Globe size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">Geospatial Matching</h3>
+            <p className="text-slate-400 leading-relaxed">
+              Optimized Haversine matching connects the nearest available volunteers to critical zones instantly.
+            </p>
+          </div>
+          
+          <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 rounded-3xl">
+            <div className="bg-teal-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-6 text-teal-400">
+              <ArrowRight size={24} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">Real-time Coordination</h3>
+            <p className="text-slate-400 leading-relaxed">
+              Live Firestore synchronization ensures every second counts when lives are on the line.
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800/50 py-12 px-8 z-10 relative">
+        <div className="max-w-7xl mx-auto flex flex-col md:row items-center justify-between text-slate-500 text-sm">
+          <p>© 2026 SmartRelief AI. Built for the Google Solution Challenge.</p>
+          <div className="flex items-center space-x-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">GitHub</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

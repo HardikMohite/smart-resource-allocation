@@ -70,11 +70,16 @@ async def process_survey(file: UploadFile = File(...)):
         # Prepare Gemini model
         model = genai.GenerativeModel('gemini-1.5-pro')
         
-        # Strict JSON schema enforcement
+        # Strict JSON schema enforcement with AI Verification
         prompt = """
         Analyze this disaster relief field survey image. 
-        Extract the information into a strict JSON format with the following fields:
+        Perform a verification check: Is this image showing a genuine crisis or emergency? 
+        Or is it a fake/test/irrelevant image?
+        
+        Extract the information into a strict JSON format:
         {
+          "is_authentic": boolean (true if genuine disaster, false if test/meme/fake/irrelevant),
+          "confidence_score": 0.0-1.0 (float),
           "title": "Short descriptive title",
           "description": "Detailed description of the issue",
           "category": "One of: Medical, Food, Infrastructure, Rescue, Water",
@@ -97,21 +102,28 @@ async def process_survey(file: UploadFile = File(...)):
         task_data = json.loads(response.text)
         
         # Add metadata and save to Firestore
+        status = "open" if task_data.get("is_authentic", True) else "rejected"
+        
         if db:
             task_id = str(uuid.uuid4())
             task_ref = db.collection('tasks').document(task_id)
             task_record = {
                 **task_data,
                 "task_id": task_id,
-                "status": "open",
+                "status": status,
                 "created_at": firestore.SERVER_TIMESTAMP
             }
             task_ref.set(task_record)
         else:
             task_id = "mock-task-id-" + str(uuid.uuid4())[:8]
-            print(f"Dry run: Task {task_id} would be saved to Firestore.")
+            print(f"Dry run: Task {task_id} with status {status} would be saved.")
         
-        return {"status": "success", "task_id": task_id, "data": task_data}
+        return {
+            "status": "success", 
+            "task_id": task_id, 
+            "is_authentic": task_data.get("is_authentic", True),
+            "confidence_score": task_data.get("confidence_score", 1.0)
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Processing failed: {str(e)}")
