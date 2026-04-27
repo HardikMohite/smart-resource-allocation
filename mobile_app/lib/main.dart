@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:mobile_app/screens/dashboard_screen.dart';
 import 'package:mobile_app/screens/login_screen.dart';
 import 'dart:developer' as developer;
 
@@ -49,7 +48,7 @@ class SmartResourceApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: const Color(0xFF1E293B),
           elevation: 0,
           shape: RoundedRectangleBorder(

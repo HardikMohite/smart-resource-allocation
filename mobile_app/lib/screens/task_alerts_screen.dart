@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:developer' as developer;
 
 class TaskAlertsScreen extends StatelessWidget {
@@ -79,10 +79,10 @@ class TaskAlertsScreen extends StatelessWidget {
                                 ),
                                 child: Text(
                                   'LVL ${task['severity_score']}',
-                                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 10, fontWeight: FontWeight.black, letterSpacing: 1.0),
+                                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                                 ),
                               ),
-                              const Icon(LucideIcons.moreHorizontal, size: 18, color: Colors.slate),
+                              Icon(LucideIcons.moreHorizontal, size: 18, color: Colors.blueGrey),
                             ],
                           ),
                         ),
@@ -99,7 +99,7 @@ class TaskAlertsScreen extends StatelessWidget {
                               const SizedBox(height: 8),
                               Text(
                                 task['description'] ?? 'No description provided.',
-                                style: TextStyle(color: Colors.slate.shade400, fontSize: 13, height: 1.5),
+                                style: TextStyle(color: Colors.blueGrey.shade400, fontSize: 13, height: 1.5),
                               ),
                               const SizedBox(height: 32),
                               
@@ -116,7 +116,7 @@ class TaskAlertsScreen extends StatelessWidget {
                                           await launchUrl(Uri.parse(url));
                                         }
                                       },
-                                      icon: const Icon(LucideIcons.navigation, size: 16),
+                                      icon: Icon(LucideIcons.navigation, size: 16),
                                       label: const Text('NAVIGATE', style: TextStyle(letterSpacing: 1.2)),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color(0xFF3B82F6),
@@ -138,7 +138,7 @@ class TaskAlertsScreen extends StatelessWidget {
                                             .doc(taskId)
                                             .update({'status': 'resolved'});
                                       },
-                                      icon: const Icon(LucideIcons.checkCircle, color: Color(0xFF10B981), size: 24),
+                                      icon: Icon(LucideIcons.checkCircle, color: Color(0xFF10B981), size: 24),
                                       padding: const EdgeInsets.all(14),
                                     ),
                                   ),
@@ -169,7 +169,7 @@ class TaskAlertsScreen extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
-            child: Icon(icon, size: 48, color: Colors.slate.shade600),
+            child: Icon(icon, size: 48, color: Colors.blueGrey.shade600),
           ),
           const SizedBox(height: 24),
           Text(
@@ -178,13 +178,13 @@ class TaskAlertsScreen extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w900,
               letterSpacing: 2.0,
-              color: Colors.slate.shade500,
+              color: Colors.blueGrey.shade500,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Operations are running normally.',
-            style: TextStyle(fontSize: 11, color: Colors.slate),
+            style: TextStyle(fontSize: 11, color: Colors.blueGrey),
           ),
         ],
       ),

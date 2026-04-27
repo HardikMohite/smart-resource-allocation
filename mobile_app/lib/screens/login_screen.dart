@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/dashboard_screen.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       ],
                     ),
-                    child: const Icon(LucideIcons.shield, size: 56, color: Color(0xFF3B82F6)),
+                    child: Icon(LucideIcons.shield, size: 56, color: Color(0xFF3B82F6)),
                   ),
                 ),
                 
@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(LucideIcons.gavel, size: 12),
+                      Icon(LucideIcons.gavel, size: 12),
                       const SizedBox(width: 10),
                       const Text(
                         'ENCRYPTED PRODUCTION GATEWAY',

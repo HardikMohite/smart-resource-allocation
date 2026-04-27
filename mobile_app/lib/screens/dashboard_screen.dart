@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:lucide_icons_flutter/lucide_icons_flutter.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:developer' as developer;
 
 class DashboardScreen extends StatefulWidget {
@@ -110,7 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: const Icon(LucideIcons.bell, size: 20),
+            icon: Icon(LucideIcons.bell, size: 20),
           ),
           const SizedBox(width: 8),
         ],
@@ -125,11 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: (index) => setState(() => _currentIndex = index),
           backgroundColor: const Color(0xFF0F172A),
           selectedItemColor: const Color(0xFF3B82F6),
-          unselectedItemColor: Colors.slate.shade600,
+          unselectedItemColor: Colors.blueGrey.shade600,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.0),
           unselectedLabelStyle: const TextStyle(fontSize: 10, letterSpacing: 1.0),
-          items: const [
+          items: [
             BottomNavigationBarItem(icon: Icon(LucideIcons.layoutDashboard, size: 20), label: 'MAP'),
             BottomNavigationBarItem(icon: Icon(LucideIcons.listTodo, size: 20), label: 'TASKS'),
             BottomNavigationBarItem(icon: Icon(LucideIcons.user, size: 20), label: 'PROFILE'),
@@ -165,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: _isAvailable ? const Color(0xFF10B981) : Colors.slate.shade600,
+                      color: _isAvailable ? const Color(0xFF10B981) : Colors.blueGrey.shade600,
                       shape: BoxShape.circle,
                       boxShadow: _isAvailable ? [
                         BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 2)
@@ -183,13 +183,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
-                            color: _isAvailable ? const Color(0xFF10B981) : Colors.slate.shade400,
+                            color: _isAvailable ? const Color(0xFF10B981) : Colors.blueGrey.shade400,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _isAvailable ? 'Broadcasting live location...' : 'Enable duty to receive dispatches',
-                          style: TextStyle(fontSize: 11, color: Colors.slate.shade500, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 11, color: Colors.blueGrey.shade500, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -197,8 +197,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Switch.adaptive(
                     value: _isAvailable,
                     onChanged: _toggleDuty,
+                    activeThumbColor: const Color(0xFF10B981),
                     activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.5),
-                    activeColor: const Color(0xFF10B981),
                   ),
                 ],
               ),
@@ -276,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildProfileScreen() {
     return Center(
-      child: Text('Profile Screen - NGO Admin', style: TextStyle(color: Colors.slate.shade400)),
+      child: Text('Profile Screen - NGO Admin', style: TextStyle(color: Colors.blueGrey.shade400)),
     );
   }
 
