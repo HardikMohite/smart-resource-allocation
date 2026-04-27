@@ -15,11 +15,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   GoogleMapController? _mapController;
   Position? _currentPosition;
   bool _isAvailable = false;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore? _firestore;
 
   @override
   void initState() {
     super.initState();
+    try {
+      _firestore = FirebaseFirestore.instance;
+    } catch (e) {
+      print('Firestore not available in Demo Mode');
+    }
     _getCurrentLocation();
   }
 
@@ -53,13 +58,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _isAvailable = value;
     });
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await _firestore.collection('volunteers').doc(user.uid).update({
-        'is_available': value,
-        'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
-        'last_updated': FieldValue.serverTimestamp(),
-      });
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && _firestore != null) {
+        await _firestore!.collection('volunteers').doc(user.uid).update({
+          'is_available': value,
+          'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
+          'last_updated': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print('Firebase Error (Demo Mode): $e');
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -94,17 +103,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: Colors.white,
             child: Card(
               elevation: 0,
-              color: _isAvailable ? Colors.green.shade50 : Colors.slate.shade50,
+              color: _isAvailable ? Colors.green.shade50 : Colors.blueGrey.shade50,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: _isAvailable ? Colors.green.shade200 : Colors.slate.shade200,
+                  color: _isAvailable ? Colors.green.shade200 : Colors.blueGrey.shade200,
                 ),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,13 +122,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           _isAvailable ? 'ON DUTY' : 'OFF DUTY',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.black,
-                            color: _isAvailable ? Colors.green.shade700 : Colors.slate.shade700,
+                            fontWeight: FontWeight.w900,
+                            color: _isAvailable ? Colors.green.shade700 : Colors.blueGrey.shade700,
                           ),
                         ),
                         Text(
                           _isAvailable ? 'Awaiting assignments...' : 'Go on duty to receive tasks',
-                          style: TextStyle(fontSize: 12, color: Colors.slate.shade500),
+                          style: TextStyle(fontSize: 12, color: Colors.blueGrey.shade500),
                         ),
                       ],
                     ),
@@ -169,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: Colors.blue.shade700,
-        unselectedItemColor: Colors.slate.shade400,
+        unselectedItemColor: Colors.blueGrey.shade400,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Status'),
           BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Tasks'),

@@ -8,12 +8,27 @@ class TaskAlertsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    User? user;
+    try {
+      user = FirebaseAuth.instance.currentUser;
+    } catch (e) {
+      print('Firebase Auth not available in Demo Mode');
+    }
     
     return Scaffold(
       appBar: AppBar(title: const Text('My Assignments')),
       body: user == null 
-        ? const Center(child: Text('Please log in to see tasks'))
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_outline, size: 64, color: Colors.blueGrey.shade200),
+                const SizedBox(height: 16),
+                const Text('Login required for assignments', style: TextStyle(color: Colors.blueGrey)),
+                const Text('(Running in Demo Mode)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              ],
+            ),
+          )
         : StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('tasks')
@@ -33,9 +48,9 @@ class TaskAlertsScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.assignment_turned_in_outlined, size: 64, color: Colors.slate.shade200),
+                      Icon(Icons.assignment_turned_in_outlined, size: 64, color: Colors.blueGrey.shade200),
                       const SizedBox(height: 16),
-                      const Text('No active assignments', style: TextStyle(color: Colors.slate)),
+                      const Text('No active assignments', style: TextStyle(color: Colors.blueGrey)),
                     ],
                   ),
                 );
@@ -59,7 +74,7 @@ class TaskAlertsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.between,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: Text(
@@ -75,7 +90,7 @@ class TaskAlertsScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(task['description'] ?? '', style: TextStyle(color: Colors.slate.shade600)),
+                          Text(task['description'] ?? '', style: TextStyle(color: Colors.blueGrey.shade600)),
                           const Divider(height: 32),
                           Row(
                             children: [
