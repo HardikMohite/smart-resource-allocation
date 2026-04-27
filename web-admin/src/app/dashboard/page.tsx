@@ -41,9 +41,9 @@ export default function Dashboard() {
     if (!isAuthenticated) return;
 
     const mockTasks = [
-      { id: '1', task_id: '1', title: 'Flood Damage - Area 5', description: 'Major flooding reported near the riverside. Need immediate evacuation assistance.', category: 'Rescue', severity_score: 9, latitude: 40.7128, longitude: -74.0060 },
-      { id: '2', task_id: '2', title: 'Medical Supplies Shortage', description: 'Local clinic is running out of basic first aid kits and antibiotics.', category: 'Medical', severity_score: 8, latitude: 40.7306, longitude: -73.9352 },
-      { id: '3', task_id: '3', title: 'Power Line Down', description: 'Live wire on the street near public school. Urgent infrastructure repair needed.', category: 'Infrastructure', severity_score: 7, latitude: 40.7589, longitude: -73.9851 },
+      { id: '1', task_id: '1', title: 'Monsoon Flooding - Mumbai', description: 'Severe urban flooding reported. Emergency rescue teams requested.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777 },
+      { id: '2', task_id: '2', title: 'Earthquake Relief - Peru', description: 'Massive structural damage. Urgent need for medical supplies and trauma care.', category: 'Medical', severity_score: 9, latitude: -12.0464, longitude: -77.0428 },
+      { id: '3', task_id: '3', title: 'Drought Crisis - Kenya', description: 'Clean water shortage in remote village. NGO coordination required for supply run.', category: 'Water', severity_score: 8, latitude: -1.2921, longitude: 36.8219 },
     ];
 
     try {

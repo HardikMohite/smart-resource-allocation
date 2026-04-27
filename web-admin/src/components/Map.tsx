@@ -9,8 +9,8 @@ const containerStyle = {
 };
 
 const center = {
-  lat: 40.7128,
-  lng: -74.0060
+  lat: 20.0,
+  lng: 0.0
 };
 
 const libraries: ("visualization" | "places")[] = ["visualization"];
@@ -58,7 +58,7 @@ export default function Map({ tasks }: MapProps) {
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={center}
-      zoom={12}
+      zoom={2}
       onLoad={onLoad}
       onUnmount={onUnmount}
       options={{
