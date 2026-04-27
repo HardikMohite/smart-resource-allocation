@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app/main.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:developer' as developer;
 
 class TaskAlertsScreen extends StatelessWidget {
   const TaskAlertsScreen({super.key});
@@ -14,7 +15,7 @@ class TaskAlertsScreen extends StatelessWidget {
       try {
         user = FirebaseAuth.instance.currentUser;
       } catch (e) {
-        print('Firebase Auth not available in Demo Mode');
+        developer.log('Firebase Auth not available in Demo Mode');
       }
     }
     
@@ -35,8 +36,8 @@ class TaskAlertsScreen extends StatelessWidget {
         : StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('tasks')
-                .where('assigned_volunteer_uid', '==', user.uid)
-                .where('status', '==', 'assigned')
+                .where('assigned_volunteer_uid', isEqualTo: user.uid)
+                .where('status', isEqualTo: 'assigned')
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));

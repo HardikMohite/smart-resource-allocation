@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer' as developer;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,7 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         _firestore = FirebaseFirestore.instance;
       } catch (e) {
-        print('Firestore not available in Demo Mode');
+        developer.log('Firestore not available in Demo Mode');
       }
     }
     _getCurrentLocation();
@@ -45,6 +46,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final position = await Geolocator.getCurrentPosition();
+    if (!mounted) return;
     setState(() {
       _currentPosition = position;
     });
@@ -62,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     if (!isFirebaseInitialized || _firestore == null) {
-      print('Demo Mode: Skipping Firestore update');
+      developer.log('Demo Mode: Skipping Firestore update');
     } else {
       try {
         final user = FirebaseAuth.instance.currentUser;
@@ -74,10 +76,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         }
       } catch (e) {
-        print('Firebase Error (Demo Mode): $e');
+        developer.log('Firebase Error: $e');
       }
     }
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(value ? 'You are now ON DUTY' : 'You are now OFF DUTY'),
@@ -142,7 +145,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Switch.adaptive(
                       value: _isAvailable,
                       onChanged: _toggleDuty,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
+                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
                     ),
                   ],
                 ),

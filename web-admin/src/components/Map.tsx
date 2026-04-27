@@ -43,7 +43,7 @@ export default function Map({ tasks }: MapProps) {
     setMap(_map);
   }, []);
 
-  const onUnmount = useCallback(function callback(_map: google.maps.Map) {
+  const onUnmount = useCallback(function callback() {
     setMap(null);
   }, []);
 

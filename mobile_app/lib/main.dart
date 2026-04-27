@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app/screens/dashboard_screen.dart';
+import 'dart:developer' as developer;
 
 bool isFirebaseInitialized = false;
 
@@ -9,11 +10,11 @@ void main() async {
   
   try {
     // Attempt to initialize Firebase (will fail if options are missing)
-    // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    // isFirebaseInitialized = true;
-    print('Firebase initialized successfully');
+    await Firebase.initializeApp();
+    isFirebaseInitialized = true;
+    developer.log('Firebase initialized successfully');
   } catch (e) {
-    print('Running in Demo Mode: Firebase not initialized');
+    developer.log('Running in Demo Mode: Firebase not initialized ($e)');
   }
   
   runApp(const SmartResourceApp());

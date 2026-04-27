@@ -46,7 +46,7 @@ export default function ReportPage() {
               </div>
               <h2 className="text-2xl font-bold mb-3">Report Submitted!</h2>
               <p className="text-slate-400 leading-relaxed mb-8">
-                Thank you. Our AI is verifying the situation. You can now track your report's progress and see which volunteer is assigned.
+                Thank you. Our AI is verifying the situation. You can now track your report&apos;s progress and see which volunteer is assigned.
               </p>
               
               <Link 

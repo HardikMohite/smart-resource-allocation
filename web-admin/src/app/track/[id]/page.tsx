@@ -7,10 +7,18 @@ import { db } from '@/lib/firebase';
 import { MapPin, Clock, CheckCircle2, Phone, User, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  assigned_volunteer_name?: string;
+  assigned_volunteer_phone?: string;
+}
+
 export default function TrackingPage() {
   const params = useParams();
   const taskId = params.id as string;
-  const [task, setTask] = useState<any>(null);
+  const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,7 +49,7 @@ export default function TrackingPage() {
     return (
       <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6 text-white text-center">
         <h1 className="text-2xl font-bold mb-4">Report Not Found</h1>
-        <p className="text-slate-400 mb-8 text-sm">We couldn't find a report with this ID. It may have been cleared or the ID is incorrect.</p>
+        <p className="text-slate-400 mb-8 text-sm">We couldn&apos;t find a report with this ID. It may have been cleared or the ID is incorrect.</p>
         <Link href="/" className="bg-blue-600 px-6 py-3 rounded-xl font-bold">Back to Home</Link>
       </div>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle, MapPin, Users, CheckCircle2, Phone } from 'lucide-react';
+import { AlertCircle, Users, CheckCircle2, Phone } from 'lucide-react';
 
 interface Task {
   task_id: string;
