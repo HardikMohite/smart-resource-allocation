@@ -53,7 +53,7 @@ export default function LandingPage() {
         </div>
 
         {/* Features Preview */}
-        <div className="mt-32 grid md:grid-cols-3 gap-8">
+        <div id="technology" className="mt-32 grid md:grid-cols-3 gap-8 scroll-mt-24">
           <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 rounded-3xl">
             <div className="bg-blue-500/20 w-12 h-12 rounded-xl flex items-center justify-center mb-6 text-blue-400">
               <Zap size={24} />
@@ -85,6 +85,42 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* Impact Section */}
+      <section id="impact" className="relative z-10 max-w-7xl mx-auto px-8 py-32 border-t border-slate-800/50 scroll-mt-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-black mb-4">Driving Global <span className="text-blue-500">Impact</span></h2>
+          <p className="text-slate-400 max-w-2xl mx-auto">
+            Our platform is aligned with the United Nations Sustainable Development Goals to create a more resilient future.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-12">
+          <div className="flex flex-col items-center text-center">
+            <div className="bg-blue-600/10 p-6 rounded-3xl mb-6 border border-blue-500/20">
+              <span className="text-3xl font-bold text-blue-500">11</span>
+            </div>
+            <h4 className="font-bold mb-2 text-white">Sustainable Cities</h4>
+            <p className="text-sm text-slate-400 leading-relaxed">Reducing disaster response times by 40% in urban environments.</p>
+          </div>
+          
+          <div className="flex flex-col items-center text-center">
+            <div className="bg-indigo-600/10 p-6 rounded-3xl mb-6 border border-indigo-500/20">
+              <span className="text-3xl font-bold text-indigo-500">13</span>
+            </div>
+            <h4 className="font-bold mb-2 text-white">Climate Action</h4>
+            <p className="text-sm text-slate-400 leading-relaxed">Managing critical resource allocation during extreme weather events.</p>
+          </div>
+
+          <div className="flex flex-col items-center text-center">
+            <div className="bg-teal-600/10 p-6 rounded-3xl mb-6 border border-teal-500/20">
+              <span className="text-3xl font-bold text-teal-500">17</span>
+            </div>
+            <h4 className="font-bold mb-2 text-white">Global Partnerships</h4>
+            <p className="text-sm text-slate-400 leading-relaxed">Bridging the gap between international NGOs and local volunteers.</p>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t border-slate-800/50 py-12 px-8 z-10 relative">
