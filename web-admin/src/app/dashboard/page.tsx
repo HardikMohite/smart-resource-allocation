@@ -8,6 +8,7 @@ import TaskFeed from '@/components/TaskFeed';
 import DispatchModal from '@/components/DispatchModal';
 import { Activity, Shield, AlertTriangle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
@@ -16,6 +17,8 @@ export default function Dashboard() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [matches, setMatches] = useState([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  
+  const prevTasksCount = React.useRef(0);
 
   // Real-time listener for tasks
   useEffect(() => {
@@ -26,15 +29,31 @@ export default function Dashboard() {
     ];
 
     try {
-      const q = query(collection(db, 'tasks'), where('status', '==', 'open'));
+      const q = query(collection(db, 'tasks'), where('status', 'in', ['open', 'pending_verification']));
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
+        const taskList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Detect new tasks and trigger notification
+        if (taskList.length > prevTasksCount.current) {
+          const newTask = taskList[taskList.length - 1];
+          if (prevTasksCount.current > 0) { // Don't toast on initial load
+            toast.error(`🚨 New Citizen Report: ${newTask.title}`, {
+              description: "Urgent verification required!",
+              duration: 8000,
+            });
+            // Optional: Play alert sound
+            try { new Audio('/alert.mp3').play(); } catch(e) {}
+          }
+        }
+        
+        prevTasksCount.current = taskList.length;
+        
+        if (snapshot.empty && prevTasksCount.current === 0) {
           setTasks(mockTasks);
         } else {
-          const taskList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
           setTasks(taskList);
         }
       }, (error) => {
