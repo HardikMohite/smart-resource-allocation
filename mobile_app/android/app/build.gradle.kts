@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,6 +7,17 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
+
+// ── Read secrets from local.properties (never committed to VCS) ──────────────
+// In CI, set MAPS_API_KEY as an environment variable instead of local.properties.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun secret(key: String): String =
+    System.getenv(key) ?: localProps.getProperty(key)
+    ?: error("Missing secret '$key'. Add it to local.properties or as a CI env var.")
+// ─────────────────────────────────────────────────────────────────────────────
 
 android {
     namespace = "com.example.mobile_app"
@@ -21,18 +34,20 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.google.challenge.smartresource"
-        // Ensure minSdkVersion is at least 21 for Firebase/Maps
+        applicationId = "com.googlechallenge.smartresource"
         minSdk = 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Inject the Maps key into AndroidManifest.xml at build time.
+        // Add  MAPS_API_KEY=AIzaSy...  to android/local.properties (gitignored).
+        manifestPlaceholders["MAPS_API_KEY"] = secret("MAPS_API_KEY")
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // TODO: Replace debug signing with a proper release keystore.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
