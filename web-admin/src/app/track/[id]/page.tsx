@@ -1,28 +1,40 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { MapPin, Clock, CheckCircle2, Phone, User, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 interface Task {
   id: string;
   title: string;
   status: string;
   assigned_volunteer_name?: string;
-  assigned_volunteer_phone?: string;
+  // assigned_volunteer_phone is intentionally absent — fetched server-side only.
 }
 
 export default function TrackingPage() {
   const params = useParams();
+  const router = useRouter();
   const taskId = params.id as string;
+  const { user, loading: authLoading } = useAuth();
+
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Redirect unauthenticated users to login before any data is fetched
   useEffect(() => {
-    if (!taskId) return;
+    if (!authLoading && !user) {
+      router.replace(`/login?from=/track/${taskId}`);
+    }
+  }, [user, authLoading, router, taskId]);
+
+  useEffect(() => {
+    // Don't subscribe to Firestore until we know the user is authenticated
+    if (authLoading || !user || !taskId) return;
 
     const unsubscribe = onSnapshot(doc(db, 'tasks', taskId), (docSnap) => {
       if (docSnap.exists()) {
@@ -35,7 +47,7 @@ export default function TrackingPage() {
     });
 
     return () => unsubscribe();
-  }, [taskId]);
+  }, [taskId, user, authLoading]);
 
   if (loading) {
     return (
@@ -128,8 +140,9 @@ export default function TrackingPage() {
                   </div>
                 </div>
                 <a 
-                  href={`tel:${task.assigned_volunteer_phone}`}
+                  href={`/api/tasks/${task.id}/call`}
                   className="bg-green-500 hover:bg-green-400 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20 transition-all hover:scale-110 active:scale-95"
+                  title="Call volunteer"
                 >
                   <Phone size={24} />
                 </a>

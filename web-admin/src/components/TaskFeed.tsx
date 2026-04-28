@@ -11,7 +11,8 @@ interface Task {
   severity_score: number;
   status: string;
   assigned_volunteer_name?: string;
-  assigned_volunteer_phone?: string;
+  // assigned_volunteer_phone is intentionally excluded from the client interface.
+  // It is only accessed server-side via /api/tasks to prevent PII exposure.
 }
 
 interface TaskFeedProps {
@@ -107,8 +108,9 @@ export default function TaskFeed({ tasks, onFindMatch }: TaskFeedProps) {
                       </div>
                     </div>
                     <a 
-                      href={`tel:${task.assigned_volunteer_phone}`}
+                      href={`/api/tasks/${task.task_id}/call`}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-100"
+                      title="Call volunteer (authenticated server redirect)"
                     >
                       <Phone size={14} />
                     </a>

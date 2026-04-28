@@ -35,7 +35,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <Link 
-              href="/dashboard"
+              href="/login"
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all hover:scale-105 shadow-xl shadow-blue-600/20"
             >
               <Users size={20} />
