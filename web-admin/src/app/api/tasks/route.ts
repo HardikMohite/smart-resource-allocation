@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJWT, COOKIE_NAME } from "@/lib/auth";
-import { db } from "@/lib/firebase-admin"; // server-only Admin SDK instance
+import { db } from "@/lib/firebase"; 
 import { collection, getDocs } from "firebase/firestore";
 
 export async function GET(req: NextRequest) {
