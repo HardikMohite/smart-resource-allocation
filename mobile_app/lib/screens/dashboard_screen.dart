@@ -23,6 +23,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   FirebaseFirestore? _firestore;
   int _currentIndex = 0;
   Map<String, dynamic>? _activeTask;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void initState() {
@@ -39,29 +41,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _startMissionListener() {
-    // Stable ID for the demo to ensure Swiggy-style sync
-    const String demoUid = "demo-volunteer-123";
-    
+    final user = FirebaseAuth.instance.currentUser;
+    final String uid = user?.uid ?? "demo-volunteer-123";
     _firestore!
         .collection('tasks')
-        .where('assigned_volunteer_uid', isEqualTo: demoUid)
+        .where('assigned_volunteer_uid', isEqualTo: uid)
         .where('status', isEqualTo: 'assigned')
         .snapshots()
         .listen((snap) {
       if (snap.docs.isNotEmpty) {
-        developer.log('🚨 [DISPATCH RECEIVED] New mission assigned to this device!');
         setState(() => _activeTask = snap.docs.first.data());
-        
-        // Show a "Zomato-style" mission alert
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🚨 NEW MISSION DISPATCHED: PROCEED TO SITE'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 5),
-            ),
-          );
-        }
       } else {
         setState(() => _activeTask = null);
       }
@@ -79,19 +68,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _updateProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final String uid = user?.uid ?? "demo-volunteer-123";
+    if (_firestore != null) {
+      await _firestore!.collection('volunteers').doc(uid).set({
+        'name': _nameController.text.isEmpty ? 'Field Responder (Demo)' : _nameController.text,
+        'phone': _phoneController.text.isEmpty ? '+91 98765 43210' : _phoneController.text,
+        'email': user?.email ?? 'responder@smartrelief.org',
+        'last_updated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated Locally & Cloud Sync Complete')));
+      }
+    }
+  }
+
   Future<void> _toggleDuty(bool value) async {
     setState(() => _isAvailable = value);
+    final user = FirebaseAuth.instance.currentUser;
+    final String uid = user?.uid ?? "demo-volunteer-123";
 
     if (isFirebaseInitialized && _firestore != null && _currentPosition != null) {
       try {
-        const String demoUid = "demo-volunteer-123";
-        await _firestore!.collection('volunteers').doc(demoUid).set({
-          'name': 'Field Responder (Demo)',
+        await _firestore!.collection('volunteers').doc(uid).set({
           'is_available': value,
           'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
           'last_updated': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        developer.log('🚀 [SYNC] On-Duty: $value');
       } catch (e) {
         developer.log('❌ [SYNC ERROR] $e');
       }
@@ -107,17 +112,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('COMMAND CENTER')),
+      appBar: AppBar(
+        title: const Text('COMMAND CENTER', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 16)),
+        elevation: 0,
+        backgroundColor: const Color(0xFF0F172A),
+      ),
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         backgroundColor: const Color(0xFF0F172A),
         selectedItemColor: const Color(0xFF3B82F6),
+        unselectedItemColor: Colors.blueGrey,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(icon: Icon(LucideIcons.layoutDashboard, size: 20), label: 'MAP'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.listTodo, size: 20), label: 'TASKS'),
-          BottomNavigationBarItem(icon: Icon(LucideIcons.user, size: 20), label: 'PROFILE'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.layoutDashboard, size: 22), label: 'MAP'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.listTodo, size: 22), label: 'TASKS'),
+          BottomNavigationBarItem(icon: Icon(LucideIcons.user, size: 22), label: 'PROFILE'),
         ],
       ),
     );
@@ -169,15 +181,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         markers: [
                           Marker(
                             point: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-                            width: 60,
-                            height: 60,
+                            width: 60, height: 60,
                             child: const Icon(LucideIcons.navigation, color: Color(0xFF3B82F6), size: 30),
                           ),
                           if (_activeTask != null && taskPos != null)
                             Marker(
                               point: taskPos,
-                              width: 60,
-                              height: 60,
+                              width: 60, height: 60,
                               child: const Icon(LucideIcons.mapPin, color: Colors.red, size: 36),
                             ),
                         ],
@@ -196,9 +206,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: _isAvailable ? Colors.green.withValues(alpha: 0.1) : const Color(0xFF64748B).withValues(alpha: 0.1),
+          color: _isAvailable ? Colors.green.withOpacity(0.1) : const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: _isAvailable ? Colors.green.withValues(alpha: 0.2) : Colors.white10),
+          border: Border.all(color: _isAvailable ? Colors.green.withOpacity(0.2) : Colors.white10),
         ),
         child: Row(
           children: [
@@ -207,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(_isAvailable ? 'ACTIVE ON DUTY' : 'OFF DUTY INACTIVE', style: TextStyle(fontWeight: FontWeight.bold, color: _isAvailable ? Colors.green : Colors.blueGrey)),
-                  Text(_activeTask != null ? '🚨 DISPATCHED TO SITE' : 'Broadcasting live location...', style: TextStyle(fontSize: 11, color: _activeTask != null ? Colors.orange : Colors.blueGrey)),
+                  Text(_activeTask != null ? '🚨 DISPATCHED TO SITE' : 'Broadcasting location...', style: TextStyle(fontSize: 11, color: Colors.blueGrey)),
                 ],
               ),
             ),
@@ -218,5 +228,122 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildProfileScreen() => const Center(child: Text('Profile Screen'));
+  Widget _buildProfileScreen() {
+    final user = FirebaseAuth.instance.currentUser;
+    final String uid = user?.uid ?? "demo-volunteer-123";
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('volunteers').doc(uid).snapshots(),
+      builder: (context, snapshot) {
+        final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
+        final name = data['name'] ?? user?.displayName ?? 'Field Responder (Demo)';
+        final phone = data['phone'] ?? '+91 98765 43210';
+        final email = data['email'] ?? user?.email ?? 'responder@smartrelief.org';
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Container(
+                width: 100, height: 100,
+                decoration: BoxDecoration(color: const Color(0xFF3B82F6).withOpacity(0.2), shape: BoxShape.circle, border: Border.all(color: const Color(0xFF3B82F6), width: 2)),
+                child: Center(child: Text(name[0].toUpperCase(), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Color(0xFF3B82F6)))),
+              ),
+              const SizedBox(height: 16),
+              Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(uid.length > 20 ? '${uid.substring(0, 10)}...${uid.substring(uid.length - 5)}' : uid, style: const TextStyle(color: Colors.blueGrey, fontSize: 12, letterSpacing: 1)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => _showEditProfileDialog(name, phone),
+                icon: const Icon(LucideIcons.edit3, size: 14),
+                label: const Text('EDIT PROFILE INFO'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E293B), foregroundColor: Colors.blueAccent),
+              ),
+              const SizedBox(height: 32),
+              _buildProfileInfoCard('Phone Number', phone, LucideIcons.phone),
+              _buildProfileInfoCard('Email Address', email, LucideIcons.mail),
+              _buildProfileInfoCard('Department', 'Disaster Response Unit', LucideIcons.shield),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  _buildStatCard('Missions', '12', Colors.blue),
+                  const SizedBox(width: 16),
+                  _buildStatCard('Status', _isAvailable ? 'Online' : 'Offline', _isAvailable ? Colors.green : Colors.grey),
+                ],
+              ),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => FirebaseAuth.instance.signOut(),
+                  icon: const Icon(LucideIcons.logOut, size: 18),
+                  label: const Text('LOGOUT SYSTEM'),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent), padding: const EdgeInsets.all(16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditProfileDialog(String currentName, String currentPhone) {
+    _nameController.text = currentName;
+    _phoneController.text = currentPhone;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        title: const Text('RESPONDER DETAILS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Full Name', labelStyle: TextStyle(color: Colors.blueGrey))),
+            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone Number', labelStyle: TextStyle(color: Colors.blueGrey))),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          ElevatedButton(onPressed: _updateProfile, child: const Text('SYNC PROFILE')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileInfoCard(String label, String value, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF3B82F6)),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.blueGrey, fontSize: 10, fontWeight: FontWeight.bold)),
+              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(24), border: Border.all(color: color.withOpacity(0.2))),
+        child: Column(
+          children: [
+            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
+            Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color.withValues(alpha: 0.7))),
+          ],
+        ),
+      ),
+    );
+  }
 }

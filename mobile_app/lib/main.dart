@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app/screens/login_screen.dart';
+import 'package:mobile_app/screens/dashboard_screen.dart';
 import 'package:mobile_app/firebase_options.dart';
 import 'dart:developer' as developer;
 
@@ -10,7 +12,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Initialize Firebase with explicit options for Web support
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -34,11 +35,11 @@ class SmartResourceApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate-900 like web
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3B82F6), // Blue-500
+          seedColor: const Color(0xFF3B82F6),
           brightness: Brightness.dark,
-          surface: const Color(0xFF1E293B), // Slate-800
+          surface: const Color(0xFF1E293B),
         ),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
@@ -51,25 +52,33 @@ class SmartResourceApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF1E293B),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFF334155), width: 1), // Slate-700
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF3B82F6),
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
       ),
-      home: const LoginScreen(),
+      home: const AuthGatekeeper(),
+    );
+  }
+}
+
+class AuthGatekeeper extends StatelessWidget {
+  const AuthGatekeeper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isFirebaseInitialized) return const LoginScreen();
+    
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        
+        // If user is logged in, show Dashboard. Otherwise, show Login.
+        if (snapshot.hasData) {
+          return const DashboardScreen();
+        }
+        
+        return const LoginScreen();
+      },
     );
   }
 }

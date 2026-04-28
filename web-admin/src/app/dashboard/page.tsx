@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { signInWithPopup, onAuthStateChanged, signOut, GoogleAuthProvider } from 'firebase/auth';
+import { collection, onSnapshot, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth, googleProvider } from '@/lib/firebase';
-import Map from '@/components/Map';
-import TaskFeed from '@/components/TaskFeed';
-import DispatchModal from '@/components/DispatchModal';
-import { Shield, LogOut, Wifi, WifiOff, Zap } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Shield, LogOut, Wifi, WifiOff, Zap, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Fix for Leaflet SSR: Dynamic import without SSR
+const Map = dynamic(() => import('@/components/Map'), { ssr: false });
+const TaskFeed = dynamic(() => import('@/components/TaskFeed'), { ssr: false });
+const DispatchModal = dynamic(() => import('@/components/DispatchModal'), { ssr: false });
+
 const MOCK_TASKS: any[] = [
-  { id: '1', task_id: '1', title: 'Monsoon Flooding - Mumbai', description: 'Severe urban flooding reported.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777, status: 'open' },
-  { id: '2', task_id: '2', title: 'Earthquake Relief - Peru', description: 'Massive structural damage.', category: 'Medical', severity_score: 9, latitude: -12.0464, longitude: -77.0428, status: 'open' },
+  { id: 'mock-1', task_id: '1', title: 'Monsoon Flooding (Mock)', description: 'Emergency training scenario.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777, status: 'open' },
 ];
 
 export default function Dashboard() {
@@ -36,7 +38,9 @@ export default function Dashboard() {
     if (!user) return;
     const unsubTasks = onSnapshot(collection(db, 'tasks'), (snap) => {
       setDbStatus('connected');
-      if (!snap.empty) setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const realTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const filteredMocks = MOCK_TASKS.filter(m => !realTasks.find(r => r.id === m.id));
+      setTasks([...filteredMocks, ...realTasks]);
     }, () => setDbStatus('error'));
 
     const unsubVolunteers = onSnapshot(collection(db, 'volunteers'), (snap) => {
@@ -47,20 +51,33 @@ export default function Dashboard() {
           : data.location;
         return { id: d.id, ...data, location };
       }).filter((v: any) => v.is_available === true);
-      
-      console.log(`🚀 [SYNC] Received ${active.length} active responders.`);
       setVolunteers(active);
     }, () => {});
 
     return () => { unsubTasks(); unsubVolunteers(); };
   }, [user]);
 
-  const handleGoogleLogin = async () => {
+  const handleSeedDisaster = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      toast.error(`Login Failed: ${error.message}`);
+      const id = `emergency-${Date.now()}`;
+      await setDoc(doc(db, 'tasks', id), {
+        title: '🔴 ACTIVE FLOODING: SECTOR 7',
+        description: 'Real-time emergency reported in Chembur. Deployment required.',
+        category: 'Rescue',
+        severity_score: 10,
+        latitude: 19.0522,
+        longitude: 72.9005,
+        status: 'open',
+        created_at: serverTimestamp()
+      });
+      toast.success("Emergency broadcasted to all responders!");
+    } catch (e) {
+      toast.error("Failed to seed emergency.");
     }
+  };
+
+  const handleGoogleLogin = async () => {
+    try { await signInWithPopup(auth, googleProvider); } catch (e: any) { toast.error(`Login Failed: ${e.message}`); }
   };
 
   if (loading) return <div className="min-h-screen bg-[#0f172a] flex items-center justify-center"><Shield className="text-blue-500 animate-bounce" size={48} /></div>;
@@ -93,7 +110,10 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="bg-slate-800 px-4 py-2 rounded-2xl border border-white/5 flex items-center space-x-3">
+          <button onClick={handleSeedDisaster} className="bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-red-500/30 transition-all font-black text-[10px] uppercase tracking-widest">
+            <PlusCircle size={14} /> <span>Seed Emergency</span>
+          </button>
+          <div className="bg-slate-800 px-4 py-2 rounded-xl border border-white/5 flex items-center space-x-3">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
             <span className="text-xs font-black uppercase tracking-widest">{volunteers.length} Active</span>
           </div>
@@ -109,12 +129,27 @@ export default function Dashboard() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[1000]"><DispatchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} matches={volunteers.map(v => ({ uid: v.id, name: v.name, distance_km: 1.2, match_score: 0.95 }))} onDispatch={async (v) => {
-          const update = { status: 'assigned', assigned_volunteer_uid: v.uid, assigned_volunteer_name: v.name, dispatched_at: new Date().toISOString() };
-          setTasks(ts => ts.map(t => t.id === selectedTask.id ? {...t, ...update} : t));
-          toast.success(`MISSION DISPATCHED: ${v.name} is on the way!`);
-          setIsModalOpen(false);
-          try { await updateDoc(doc(db, 'tasks', selectedTask.id), update); } catch (e) { console.log("Demo Mode: Local sync."); }
+        <div className="fixed inset-0 z-[1000]"><DispatchModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} matches={volunteers.map(v => ({ uid: v.id, name: v.name || "Field Responder", distance_km: 1.2, match_score: 0.95 }))} onDispatch={async (v) => {
+          if (!selectedTask) return;
+          const taskId = selectedTask.id || `task-${Date.now()}`;
+          const update = { 
+            status: 'assigned', 
+            assigned_volunteer_uid: v.uid, 
+            assigned_volunteer_name: v.name || 'Field Responder', 
+            dispatched_at: new Date().toISOString(),
+            title: selectedTask.title || 'Emergency Mission',
+            description: selectedTask.description || '',
+            latitude: selectedTask.latitude || 19.0760,
+            longitude: selectedTask.longitude || 72.8777
+          };
+          
+          try { 
+            await setDoc(doc(db, 'tasks', taskId), update, { merge: true });
+            toast.success(`MISSION DISPATCHED: ${v.name} is on the way!`);
+            setIsModalOpen(false);
+          } catch (e: any) { 
+            toast.error(`Sync Error: ${e.message}`); 
+          }
         }} taskTitle={selectedTask?.title || ""} /></div>
       )}
     </main>

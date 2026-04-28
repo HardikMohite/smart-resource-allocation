@@ -20,7 +20,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCmSUrWiWbLAEP0gF8Ci9un9RVkOHy7DL4',
+    apiKey: 'AIzaSyCmSUrWIwbLAEP0gF8Ci9un9RVkOhY7DL4',
     authDomain: 'smartrelief-a9b54.firebaseapp.com',
     projectId: 'smartrelief-a9b54',
     storageBucket: 'smartrelief-a9b54.firebasestorage.app',

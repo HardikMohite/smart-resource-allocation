@@ -1,17 +1,9 @@
-// Firestore Security Rules (Hackathon Demo Mode)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Open access for demo collections to ensure real-time sync works flawlessly
-    match /volunteers/{userId} {
-      allow read, write: if true;
-    }
-    match /tasks/{taskId} {
-      allow read, write: if true;
-    }
-    // Admin access for all other documents
+    // Open access for hackathon demonstration - ENSURES ZERO DISPATCH ERRORS
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
     }
   }
 }
