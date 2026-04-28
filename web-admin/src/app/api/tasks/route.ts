@@ -1,14 +1,19 @@
-// src/app/api/tasks/route.ts
-// Returns the full task list for the authenticated dashboard.
-// assigned_volunteer_phone is ONLY returned here — never in client-side Firestore reads.
+// src/app/api/tasks/[id]/call/route.ts
+// Server-side redirect to tel: — never exposes the phone number in HTML source
+// or client-side JS. Only authenticated users can reach this endpoint.
 
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJWT, COOKIE_NAME } from "@/lib/auth";
-import { db } from "@/lib/firebase"; 
-import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
-export async function GET(req: NextRequest) {
-  // Auth check — require a valid session cookie
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  // Require a valid session
   const token = req.cookies.get(COOKIE_NAME)?.value ?? null;
   const payload = token ? await verifyJWT(token) : null;
 
@@ -17,11 +22,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const snap = await getDocs(collection(db, "tasks"));
-    const tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    return NextResponse.json({ tasks });
+    const snap = await getDoc(doc(db, "tasks", id));
+    if (!snap.exists()) {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+
+    const phone = snap.data()?.assigned_volunteer_phone as string | undefined;
+    if (!phone) {
+      return NextResponse.json({ error: "No phone number on file." }, { status: 404 });
+    }
+
+    // Redirect to tel: — the phone number never touches the browser DOM
+    return NextResponse.redirect(`tel:${phone}`);
   } catch (err) {
-    console.error("[tasks]", err);
+    console.error("[call]", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
