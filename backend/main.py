@@ -27,13 +27,23 @@ app.add_middleware(
 )
 
 # Initialize Firebase Admin SDK
-# Note: Use default credentials for GCP Cloud Run compatibility
+# On local/Render: Uses FIREBASE_SERVICE_ACCOUNT_JSON env var
+# On GCP: Uses default application credentials
 try:
-    firebase_admin.initialize_app()
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    if service_account_json:
+        # Load from string in environment variable (perfect for Render)
+        cred_dict = json.loads(service_account_json)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+    else:
+        # Fallback to default (works on GCP)
+        firebase_admin.initialize_app()
+    
     db = firestore.client()
-    print("Firebase initialized successfully.")
+    print("✅ [BACKEND] Firebase initialized successfully.")
 except Exception as e:
-    print(f"Warning: Firebase could not be initialized. {e}")
+    print(f"❌ [BACKEND ERROR] Firebase could not be initialized: {e}")
     db = None
 
 # Initialize Gemini API
