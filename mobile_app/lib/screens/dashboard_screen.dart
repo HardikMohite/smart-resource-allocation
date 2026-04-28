@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/main.dart';
+import 'package:mobile_app/screens/login_screen.dart';
 import 'package:mobile_app/screens/task_alerts_screen.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:developer' as developer;
 
@@ -26,9 +28,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
+  // Minimum GPS accuracy (metres) required before we trust a fix.
+  static const double _minAccuracyMetres = 100.0;
+
   @override
   void initState() {
     super.initState();
+
+    // ── Secondary auth guard ──────────────────────────────────────────────
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = FirebaseAuth.instance.currentUser;
+      // Kick back to login if unauthenticated OR email not verified.
+      // (Google accounts always have emailVerified == true, so they pass.)
+      final needsLogin = user == null || !user.emailVerified;
+      if (needsLogin && isFirebaseInitialized) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    });
+
     if (isFirebaseInitialized) {
       try {
         _firestore = FirebaseFirestore.instance;
@@ -94,7 +115,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       try {
         await _firestore!.collection('volunteers').doc(uid).set({
           'is_available': value,
-          'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
           'last_updated': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e) {
