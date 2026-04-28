@@ -22,11 +22,23 @@ When disasters strike, local NGOs are overwhelmed with scattered data, and volun
 * **Mobile / Real-time:** Flutter + Firebase Cloud Firestore
 
 ## ⚙️ How to Demo / Run Locally
-1. Clone the repository.
-2. Ensure you have your `.env` files setup with `GEMINI_API_KEY` and Firebase credentials.
-3. **Backend:** `cd backend` -> `pip install -r requirements.txt` -> `uvicorn main:app --reload`
-4. **Web Admin:** `cd web-admin` -> `npm install` -> `npm run dev`
-5. **Mobile App:** `cd mobile_app` -> `flutter run`
+
+### 1. Environment Setup
+Create a `.env.local` file in the `web-admin/` directory:
+```bash
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
+NEXT_PUBLIC_FIREBASE_API_KEY=your_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+### 2. Execution
+* **Backend:** `cd backend` -> `pip install -r requirements.txt` -> `uvicorn main:app --reload`
+* **Web Admin:** `cd web-admin` -> `npm install` -> `npm run dev`
+* **Mobile App:** `cd mobile_app` -> `flutter run`
 
 ---
 ### 📑 Documentation

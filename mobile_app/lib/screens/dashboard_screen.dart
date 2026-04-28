@@ -71,15 +71,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       try {
         final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await _firestore!.collection('volunteers').doc(user.uid).update({
-            'is_available': value,
-            'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
-            'last_updated': FieldValue.serverTimestamp(),
-          });
-        }
+        // Use real UID if logged in, otherwise use a stable demo ID for the video
+        final String uid = user?.uid ?? "demo-volunteer-123";
+        
+        await _firestore!.collection('volunteers').doc(uid).set({
+          'name': user?.displayName ?? 'Field Responder (Demo)',
+          'is_available': value,
+          'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
+          'last_updated': FieldValue.serverTimestamp(),
+          'phone': '+1 (555) 000-0000'
+        }, SetOptions(merge: true));
+        
+        // Log to console so the user can see it in their terminal
+        developer.log('🚀 [SYNC SUCCESS] Volunteer status pushed to cloud: is_available=$value');
+        print('🚀 [SYNC SUCCESS] Volunteer status pushed to cloud: is_available=$value');
       } catch (e) {
-        developer.log('Firebase Error: $e');
+        developer.log('❌ [SYNC ERROR] Firestore write failed: $e');
+        print('❌ [SYNC ERROR] Firestore write failed: $e');
       }
     }
 

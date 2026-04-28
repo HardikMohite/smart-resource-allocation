@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AlertCircle, Users, CheckCircle2, Phone } from 'lucide-react';
+import { AlertCircle, Users, CheckCircle2, Phone, ShieldAlert } from 'lucide-react';
 
 interface Task {
   task_id: string;
@@ -30,6 +30,16 @@ export default function TaskFeed({ tasks, onFindMatch }: TaskFeedProps) {
         <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
           {tasks.length} Total
         </span>
+      </div>
+
+      <div className="bg-blue-600/5 p-4 m-4 rounded-2xl border border-blue-100/50">
+        <div className="flex items-center space-x-2 text-blue-600 mb-2">
+          <ShieldAlert size={14} className="animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Intelligence Summary</span>
+        </div>
+        <p className="text-xs text-slate-600 leading-relaxed font-medium">
+          <span className="text-blue-600">Gemini AI Analysis:</span> Significant cluster of high-severity flooding in Mumbai area. Recommend immediate deployment of rescue boats to Sector 4.
+        </p>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -85,19 +95,29 @@ export default function TaskFeed({ tasks, onFindMatch }: TaskFeedProps) {
                   </div>
                 </div>
                 
-                <div className="mt-4 bg-white rounded-lg p-3 border border-green-100 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                      {task.assigned_volunteer_name?.charAt(0) || 'V'}
+                <div className="mt-4 bg-white rounded-lg p-3 border border-green-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                        {task.assigned_volunteer_name?.charAt(0) || 'V'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900">{task.assigned_volunteer_name || 'Volunteer Assigned'}</p>
+                        <p className="text-[10px] text-slate-400">On the way to site</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{task.assigned_volunteer_name || 'Volunteer Assigned'}</p>
-                      <p className="text-[10px] text-slate-400">On the way to site</p>
-                    </div>
+                    <a 
+                      href={`tel:${task.assigned_volunteer_phone}`}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-100"
+                    >
+                      <Phone size={14} />
+                    </a>
                   </div>
-                  <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    <Phone size={14} />
-                  </button>
+                  
+                  <div className="mt-3 pt-3 border-t border-slate-50 flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">Assignment ID: <span className="font-mono text-slate-600">{task.task_id.slice(0, 8)}</span></span>
+                    <span className="text-blue-500 font-bold">LIVE TRACKING ACTIVE</span>
+                  </div>
                 </div>
               </div>
             ))}

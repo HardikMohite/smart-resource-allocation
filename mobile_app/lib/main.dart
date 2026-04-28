@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app/screens/login_screen.dart';
+import 'package:mobile_app/firebase_options.dart';
 import 'dart:developer' as developer;
 
 bool isFirebaseInitialized = false;
@@ -9,12 +10,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Attempt to initialize Firebase (will fail if options are missing)
-    await Firebase.initializeApp();
+    // Initialize Firebase with explicit options for Web support
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     isFirebaseInitialized = true;
-    developer.log('Firebase initialized successfully');
+    developer.log('🔥 Firebase initialized successfully');
   } catch (e) {
-    developer.log('Running in Demo Mode: Firebase not initialized ($e)');
+    developer.log('⚠️ Running in Demo Mode: Firebase not initialized ($e)');
   }
   
   runApp(const SmartResourceApp());

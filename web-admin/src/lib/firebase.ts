@@ -1,21 +1,26 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence } from "firebase/auth";
 
-// Firebase configuration for the Smart Resource Allocation System
-// TODO: Replace with actual project credentials from Firebase Console
+// V3 RE-VERIFIED CONFIG
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCmSUrWiWbLAEP0gF8Ci9un9RVkOHy7DL4",
+  authDomain: "smartrelief-a9b54.firebaseapp.com",
+  projectId: "smartrelief-a9b54",
+  storageBucket: "smartrelief-a9b54.firebasestorage.app",
+  messagingSenderId: "127143907466",
+  appId: "1:127143907466:web:9576ce51a4f02d85f11d73",
+  measurementId: "G-QC2FB4ENCC"
 };
 
-// Initialize Firebase (Singleton pattern)
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-export { db, auth };
+// Enable persistence to help with redirects
+setPersistence(auth, browserLocalPersistence);
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export { app, auth, db, googleProvider };

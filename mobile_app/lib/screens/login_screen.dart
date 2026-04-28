@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/dashboard_screen.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_app/main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,14 +17,31 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
     
-    // Simulate Google Login delay
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (!mounted) return;
-    
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
-    );
+    try {
+      if (!isFirebaseInitialized) {
+        throw Exception("Firebase not initialized. Check your configuration.");
+      }
+
+      // On Web, we can use signInWithPopup directly with the Google provider
+      GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      await FirebaseAuth.instance.signInWithPopup(googleProvider);
+      
+      if (!mounted) return;
+      
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login Failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -138,8 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.network(
-                              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg', // Stable Google-hosted SVG
                               height: 22,
+                              errorBuilder: (context, error, stackTrace) => Icon(LucideIcons.mail, size: 22, color: Color(0xFF0F172A)),
                             ),
                             const SizedBox(width: 14),
                             const Text(
@@ -152,6 +172,27 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                  ),
+                  child: Opacity(
+                    opacity: 0.6,
+                    child: Text(
+                      'CONTINUE IN DEMO MODE (BYPASS AUTH)',
+                      style: TextStyle(
+                        color: Colors.blue.shade400,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
                 ),
                 
