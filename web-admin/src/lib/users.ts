@@ -44,28 +44,39 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function createUser(
   data: Omit<AppUser, "uid" | "passwordHash" | "createdAt"> & { password: string }
 ): Promise<{ user: AppUser } | { error: string }> {
-  // check duplicate email
-  const existing = await getDocs(
-    query(collection(db, "users"), where("email", "==", data.email))
-  );
-  if (!existing.empty) return { error: "Email already registered." };
+  try {
+    console.log("🛠️ [REGISTER] Checking duplicate email:", data.email);
+    const existing = await getDocs(
+      query(collection(db, "users"), where("email", "==", data.email))
+    );
+    if (!existing.empty) {
+      console.log("⚠️ [REGISTER] Email already exists.");
+      return { error: "Email already registered." };
+    }
 
-  const uid = crypto.randomUUID();
-  const passwordHash = await hashPassword(data.password);
+    console.log("🛠️ [REGISTER] Generating UID and Hashing Password...");
+    const uid = crypto.randomUUID();
+    const passwordHash = await hashPassword(data.password);
 
-  const user: AppUser = {
-    uid,
-    name: data.name,
-    age: data.age,
-    phone: data.phone,
-    email: data.email,
-    gender: data.gender,
-    passwordHash,
-    createdAt: new Date().toISOString(),
-  };
+    const user: AppUser = {
+      uid,
+      name: data.name,
+      age: data.age,
+      phone: data.phone,
+      email: data.email,
+      gender: data.gender,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+    };
 
-  await setDoc(doc(db, "users", uid), user);
-  return { user };
+    console.log("🛠️ [REGISTER] Writing to Firestore...");
+    await setDoc(doc(db, "users", uid), user);
+    console.log("✅ [REGISTER] User created successfully:", uid);
+    return { user };
+  } catch (e: any) {
+    console.error("❌ [REGISTER ERROR]", e);
+    return { error: `Registration failed: ${e.message}` };
+  }
 }
 
 // ─── find user by email ───────────────────────────────────────────────────────

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc, serverTimestamp, deleteField } from 'firebase/firestore';
 import { signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
 import { db, auth, googleProvider } from '@/lib/firebase';
 import dynamic from 'next/dynamic';
-import { Shield, LogOut, Wifi, WifiOff, Zap, PlusCircle } from 'lucide-react';
+import { Shield, LogOut, Wifi, WifiOff, Zap, PlusCircle, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Fix for Leaflet SSR: Dynamic import without SSR
@@ -17,6 +17,21 @@ const MOCK_TASKS: any[] = [
   { id: 'mock-1', task_id: '1', title: 'Monsoon Flooding (Mock)', description: 'Emergency training scenario.', category: 'Rescue', severity_score: 10, latitude: 19.0760, longitude: 72.8777, status: 'open' },
 ];
 
+const SCENARIOS = [
+  { title: "🔴 BUILDING COLLAPSE: SECTOR 4", desc: "Multi-story structure failure reported. Search and rescue active.", cat: "Rescue", lat: 19.2183, lng: 72.9781 },
+  { title: "☣️ CHEMICAL LEAK: MIDC AREA", desc: "Hazardous material spill. HAZMAT deployment requested.", cat: "Hazmat", lat: 19.1176, lng: 73.0115 },
+  { title: "🏥 MASS CASUALTY: COLABA", desc: "Large scale medical emergency. Multiple ambulances required.", cat: "Medical", lat: 18.9067, lng: 72.8147 },
+  { title: "🔥 FOREST FIRE: NATIONAL PARK", desc: "Wildfire spreading toward residential perimeter. Fire crews needed.", cat: "Fire", lat: 19.2288, lng: 72.9182 }
+];
+
+const VOLUNTEER_SEEDS = [
+  { name: "Officer Rajesh Kumar", lat: 19.0330, lng: 73.0297 },
+  { name: "Medic Sarah Chen", lat: 19.1136, lng: 72.8697 },
+  { name: "Responder Amit Shah", lat: 19.0760, lng: 72.8777 },
+  { name: "Rescue Lead Priya", lat: 19.1860, lng: 72.8485 },
+  { name: "Specialist David", lat: 19.0473, lng: 72.8193 }
+];
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +40,7 @@ export default function Dashboard() {
   const [volunteers, setVolunteers] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [scenarioIdx, setScenarioIdx] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => { 
@@ -59,20 +75,56 @@ export default function Dashboard() {
 
   const handleSeedDisaster = async () => {
     try {
+      const s = SCENARIOS[scenarioIdx % SCENARIOS.length];
       const id = `emergency-${Date.now()}`;
       await setDoc(doc(db, 'tasks', id), {
-        title: '🔴 ACTIVE FLOODING: SECTOR 7',
-        description: 'Real-time emergency reported in Chembur. Deployment required.',
-        category: 'Rescue',
+        title: s.title,
+        description: s.desc,
+        category: s.cat,
         severity_score: 10,
-        latitude: 19.0522,
-        longitude: 72.9005,
+        latitude: s.lat,
+        longitude: s.lng,
         status: 'open',
         created_at: serverTimestamp()
       });
-      toast.success("Emergency broadcasted to all responders!");
+      setScenarioIdx(prev => prev + 1);
+      toast.success(`Broadcasting: ${s.title}`);
     } catch (e) {
       toast.error("Failed to seed emergency.");
+    }
+  };
+
+  const handleSeedVolunteers = async () => {
+    try {
+      for (const v of VOLUNTEER_SEEDS) {
+        const id = `demo-vol-${Math.random().toString(36).substr(2, 9)}`;
+        await setDoc(doc(db, 'volunteers', id), {
+          name: v.name,
+          phone: "+91 98765 43210",
+          is_available: true,
+          location: { latitude: v.lat, longitude: v.lng },
+          skills: ["First Aid", "Rescue", "Navigation"],
+          updated_at: serverTimestamp()
+        });
+      }
+      toast.success("5 Field Responders deployed to the grid!");
+    } catch (e) {
+      toast.error("Failed to seed volunteers.");
+    }
+  };
+
+  const handleCancelDispatch = async (task: any) => {
+    try {
+      const taskRef = doc(db, 'tasks', task.id);
+      await updateDoc(taskRef, {
+        status: 'open',
+        assigned_volunteer_uid: deleteField(),
+        assigned_volunteer_name: deleteField(),
+        dispatched_at: deleteField()
+      });
+      toast.success("Dispatch recalled. Responder notified.");
+    } catch (e) {
+      toast.error("Cancel failed. Task might be local-only.");
     }
   };
 
@@ -110,6 +162,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center space-x-4">
+          <button onClick={handleSeedVolunteers} className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-blue-500/20 transition-all font-black text-[10px] uppercase tracking-widest">
+            <Users size={14} /> <span>Seed Responders</span>
+          </button>
           <button onClick={handleSeedDisaster} className="bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl flex items-center space-x-2 hover:bg-red-500/30 transition-all font-black text-[10px] uppercase tracking-widest">
             <PlusCircle size={14} /> <span>Seed Emergency</span>
           </button>
@@ -124,7 +179,11 @@ export default function Dashboard() {
       <div className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 relative z-10"><Map tasks={tasks} volunteers={volunteers} /></div>
         <div className="w-[420px] z-30 relative bg-slate-900 border-l border-white/10 shadow-2xl overflow-y-auto">
-          <TaskFeed tasks={tasks} onFindMatch={(task) => { setSelectedTask(task); setIsModalOpen(true); }} />
+          <TaskFeed 
+            tasks={tasks} 
+            onFindMatch={(task) => { setSelectedTask(task); setIsModalOpen(true); }} 
+            onCancelDispatch={handleCancelDispatch}
+          />
         </div>
       </div>
 
