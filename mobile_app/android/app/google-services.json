@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "127143907466",
+    "project_id": "smartrelief-a9b54",
+    "storage_bucket": "smartrelief-a9b54.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127143907466:android:b1391000de8bcaa8f11d73",
+        "android_client_info": {
+          "package_name": "com.googlechallenge.smartresource"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127143907466-s2rcc2c9vmi5rd96308v5ir65psbe33b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3W1uPyT3CM2d79IhoJVUHlN4GTYx6xeE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127143907466-s2rcc2c9vmi5rd96308v5ir65psbe33b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
